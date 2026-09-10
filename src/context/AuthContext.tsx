@@ -57,9 +57,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_USERS = 'aygram_auth_users_v1';
-const STORAGE_SESSION = 'aygram_auth_session_v1';
-const STORAGE_OTP = 'aygram_auth_otp_v1';
+const STORAGE_USERS = 'aygram_auth_users_v3';
+const STORAGE_SESSION = 'aygram_auth_session_v3';
+const STORAGE_OTP = 'aygram_auth_otp_v3';
 
 const generateOtp = (): string => Math.floor(100000 + Math.random() * 900000).toString();
 

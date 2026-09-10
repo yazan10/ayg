@@ -191,27 +191,27 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  STORES: 'aygram_stores_v2',
-  PRODUCTS: 'aygram_products_v2',
-  REELS: 'aygram_reels_v2',
-  CONVERSATIONS: 'aygram_conversations_v2',
-  NOTIFICATIONS: 'aygram_notifications_v2',
-  USERS: 'aygram_users_v2',
-  COMMENTS: 'aygram_comments_v2',
-  STORIES: 'aygram_stories_v2',
-  ORDERS: 'aygram_orders_v2',
-  SETTINGS: 'aygram_settings_v2',
+  STORES: 'aygram_stores_v3',
+  PRODUCTS: 'aygram_products_v3',
+  REELS: 'aygram_reels_v3',
+  CONVERSATIONS: 'aygram_conversations_v3',
+  NOTIFICATIONS: 'aygram_notifications_v3',
+  USERS: 'aygram_users_v3',
+  COMMENTS: 'aygram_comments_v3',
+  STORIES: 'aygram_stories_v3',
+  ORDERS: 'aygram_orders_v3',
+  SETTINGS: 'aygram_settings_v3',
   LANG: 'aygram_lang_v2',
   CURRENCY: 'aygram_currency_v2',
-  LIVE_STREAMS: 'aygram_live_streams_v2',
-  WALLET: 'aygram_wallet_v2',
-  LIKED_PRODS: 'aygram_liked_prods_v2',
-  SAVED_PRODS: 'aygram_saved_prods_v2',
-  LIKED_REELS: 'aygram_liked_reels_v2',
-  SAVED_REELS: 'aygram_saved_reels_v2',
-  CART: 'aygram_cart_v2',
-  BLOCKED: 'aygram_blocked_v2',
-  REPORTS: 'aygram_reports_v2'
+  LIVE_STREAMS: 'aygram_live_streams_v3',
+  WALLET: 'aygram_wallet_v3',
+  LIKED_PRODS: 'aygram_liked_prods_v3',
+  SAVED_PRODS: 'aygram_saved_prods_v3',
+  LIKED_REELS: 'aygram_liked_reels_v3',
+  SAVED_REELS: 'aygram_saved_reels_v3',
+  CART: 'aygram_cart_v3',
+  BLOCKED: 'aygram_blocked_v3',
+  REPORTS: 'aygram_reports_v3'
 };
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -285,9 +285,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USERS);
       const baseUsers: UserAccount[] = saved ? JSON.parse(saved) : INITIAL_USERS;
-      // Merge Auth users if exist (aygram_auth_users_v1)
+      // Merge Auth users if exist (aygram_auth_users_v3 - zeroed)
       try {
-        const authUsersRaw = localStorage.getItem('aygram_auth_users_v1');
+        const authUsersRaw = localStorage.getItem('aygram_auth_users_v3') || localStorage.getItem('aygram_auth_users_v1');
         if (authUsersRaw) {
           const authUsers = JSON.parse(authUsersRaw);
           // Convert AuthUser to UserAccount and merge
@@ -374,6 +374,24 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const authSessionUser = getAuthSessionUser();
   const currentUser = authSessionUser || users.find(u => u.isCurrentUser) || INITIAL_USERS[0] || null;
+
+  // Clear old demo data for zeroed site
+  useEffect(() => {
+    const oldKeys = ['aygram_stores_v2', 'aygram_products_v2', 'aygram_reels_v2', 'aygram_stories_v2', 'aygram_users_v2', 'aygram_comments_v2', 'aygram_orders_v2', 'aygram_conversations_v2', 'aygram_notifications_v2', 'aygram_auth_users_v1', 'aygram_auth_users_v2', 'aygram_auth_session_v1'];
+    oldKeys.forEach(k => {
+      if (localStorage.getItem(k)) {
+        const newKey = k.replace('_v2', '_v3').replace('_v1', '_v3');
+        if (!localStorage.getItem(newKey)) {
+          // For zeroed site, remove old demo data
+          if (k.includes('stores') || k.includes('products') || k.includes('users') || k.includes('reels') || k.includes('stories')) {
+            localStorage.removeItem(k);
+          }
+        }
+      }
+    });
+    // Also clear old matjari keys
+    ['matjari_stores_v1', 'matjari_products_v1', 'matjari_orders_v1'].forEach(k => localStorage.removeItem(k));
+  }, []);
 
   // Force rerender when auth changes (same-tab)
   const [, setAuthTick] = useState(0);
