@@ -37,7 +37,7 @@ export const StoresPage: React.FC = () => {
         actions={<button onClick={() => navigate('/pricing')} className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold"><Crown className="w-3.5 h-3.5" />{lang === 'ar' ? 'الأسعار' : 'Pricing'}</button>}
       />
 
-      <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-5">
+      <div className="max-w-5xl lg:max-w-6xl mx-auto p-4 sm:p-6 space-y-5">
         {/* Info Banner */}
         <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 flex items-start gap-3">
           <StoreIcon className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
@@ -91,7 +91,7 @@ export const StoresPage: React.FC = () => {
               <p className="text-sm text-neutral-500">لا توجد متاجر بهذا الفلتر</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map(store => {
                 const active = isStoreActive(store.id);
                 const prods = products.filter(p => p.storeId === store.id);

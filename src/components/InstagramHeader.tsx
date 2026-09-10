@@ -61,7 +61,7 @@ export const InstagramHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-neutral-200/70 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all">
-      <div className="max-w-[1280px] mx-auto px-3 sm:px-4 lg:px-6 h-[56px] sm:h-[60px] flex items-center justify-between gap-2 sm:gap-4">
+      <div className="max-w-[1280px] 2xl:max-w-[1440px] mx-auto px-3 sm:px-4 lg:px-6 h-[56px] sm:h-[60px] flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleLogoClick}
