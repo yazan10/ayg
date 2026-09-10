@@ -13,6 +13,23 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // aygram - app-wide backup documents (stores, products, users, orders, _health).
+    // The app has its own local email/password auth (not Firebase Auth), so writes here
+    // are never made by a signed-in Firebase user - this must stay open for the app's
+    // localStorage -> Firestore backup sync to work.
+    match /aygram/{docId} {
+      allow read, write: if true;
+    }
+
+    // OTP / pending registration records - written by the app during signup/login,
+    // never read back by clients (verification happens against local state).
+    match /otps/{otpId} {
+      allow read, write: if true;
+    }
+    match /pending_otps/{otpId} {
+      allow read, write: if true;
+    }
+
     // Users - each user can read all, write only own
     match /users/{userId} {
       allow read: if true;
