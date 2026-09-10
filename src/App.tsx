@@ -31,6 +31,7 @@ import { BlockedUsersPage } from './pages/BlockedUsersPage';
 import { UserProfile } from './pages/UserProfile';
 import { MyAccountsPage } from './pages/MyAccountsPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { WelcomePage } from './pages/WelcomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ExploreView } from './components/ExploreView';
 import { ReelsView } from './components/ReelsView';
@@ -83,6 +84,12 @@ const ReelsRoute: React.FC = () => {
   return <ReelsView />;
 };
 
+const WelcomeOrHome: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <WelcomePage />;
+  return <HomePage />;
+};
+
 function AppRoutes() {
   const { isLoading, message } = useAppPageLoader({
     initialDelay: 2000,
@@ -113,9 +120,12 @@ function AppRoutes() {
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
+        {/* Welcome - first screen for guests */}
+        <Route path="/welcome" element={<WelcomePage />} />
+
         {/* Main App with Layout */}
         <Route element={<AppLayout />}>
-          <Route index element={<HomePage />} />
+          <Route index element={<WelcomeOrHome />} />
           <Route path="explore" element={<ExploreView />} />
           <Route path="reels" element={<ReelsRoute />} />
           <Route path="messages" element={<DirectMessagesView />} />

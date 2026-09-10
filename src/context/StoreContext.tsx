@@ -341,10 +341,15 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   });
 
-  // Sync Auth session to determine currentUser
+  // Sync Auth session to determine currentUser (checks localStorage v3, v1 and cookie)
   const getAuthSessionUser = (): UserAccount | null => {
     try {
-      const raw = localStorage.getItem('aygram_auth_session_v1');
+      const raw = localStorage.getItem('aygram_auth_session_v3') || localStorage.getItem('aygram_auth_session_v1') || (() => {
+        try {
+          const m = document.cookie.match(new RegExp('(^| )aygram_session=([^;]+)'));
+          return m ? decodeURIComponent(m[2]) : null;
+        } catch { return null; }
+      })();
       if (!raw) return null;
       const authUser = JSON.parse(raw);
       // Find matching UserAccount in users or convert

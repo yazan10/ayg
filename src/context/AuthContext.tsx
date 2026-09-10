@@ -83,10 +83,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   });
 
+  // Cookie helpers for auto-persistence
+  const setCookie = (name: string, value: string, days = 30) => {
+    try {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+    } catch {}
+  };
+  const getCookie = (name: string): string | null => {
+    try {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    } catch {
+      return null;
+    }
+  };
+  const deleteCookie = (name: string) => {
+    try {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+    } catch {}
+  };
+
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_SESSION);
-      return saved ? JSON.parse(saved) : null;
+      if (saved) return JSON.parse(saved);
+      const cookie = getCookie('aygram_session');
+      if (cookie) return JSON.parse(cookie);
+      return null;
     } catch {
       return null;
     }
@@ -139,8 +163,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [users]);
 
   useEffect(() => {
-    if (currentUser) localStorage.setItem(STORAGE_SESSION, JSON.stringify(currentUser));
-    else localStorage.removeItem(STORAGE_SESSION);
+    if (currentUser) {
+      const serialized = JSON.stringify(currentUser);
+      localStorage.setItem(STORAGE_SESSION, JSON.stringify(currentUser));
+      setCookie('aygram_session', serialized, 30);
+      setCookie('aygram_user', currentUser.username, 30);
+    } else {
+      localStorage.removeItem(STORAGE_SESSION);
+      deleteCookie('aygram_session');
+      deleteCookie('aygram_user');
+    }
     // Notify StoreContext and other listeners in same tab
     try { window.dispatchEvent(new Event('aygram_auth_change')); } catch {}
   }, [currentUser]);
