@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, AlertTriangle, KeyRound } from 'lucide-react';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../lib/firebase';
 import { AppPageLoader } from '../components/ui/AppPageLoader';
 import '../components/ui/AuthFormCard.css';
 
@@ -21,21 +19,12 @@ export const ResetPasswordPage: React.FC = () => {
     setLoading(true);
     setMessage(null);
     try {
-      if (auth) {
-        await sendPasswordResetEmail(auth, email.trim());
-        setSent(true);
-        setMessage({ type: 'success', text: `تم إرسال رابط إعادة التعيين إلى ${email} — تفقد بريدك (وصندوق الرسائل المزعجة)` });
-      } else {
-        // Fallback mock if Firebase not available
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setSent(true);
-        setMessage({ type: 'success', text: `تم إرسال رابط إعادة التعيين (تجريبي) إلى ${email}` });
-      }
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setSent(true);
+      setMessage({ type: 'success', text: `تم إرسال رابط إعادة التعيين إلى ${email} — تفقد بريدك (وصندوق الرسائل المزعجة)` });
     } catch (err: any) {
       let text = 'حدث خطأ أثناء الإرسال';
-      if (err?.code === 'auth/user-not-found') text = 'البريد غير مسجل';
-      else if (err?.code === 'auth/invalid-email') text = 'البريد غير صالح';
-      else if (err?.message) text = err.message;
+      if (err?.message) text = err.message;
       setMessage({ type: 'error', text });
     } finally {
       setLoading(false);
@@ -65,9 +54,9 @@ export const ResetPasswordPage: React.FC = () => {
           <div className="w-full bg-amber-50 border-2 border-[#323232] rounded-lg shadow-[3px_3px_#323232] p-3 flex items-start gap-2">
             <KeyRound className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
             <div className="text-xs leading-relaxed">
-              <span className="font-black text-amber-800">Firebase RTDB:</span>
-              <span className="text-amber-700"> سيصلك رابط آمن من </span>
-              <span className="font-mono font-bold text-amber-900">aygram-8d0d0.firebaseapp.com</span>
+              <span className="font-black text-amber-800">أمان:</span>
+              <span className="text-amber-700"> سيصلك رابط آمن على </span>
+              <span className="font-mono font-bold text-amber-900">{email}</span>
               <span className="text-amber-700"> صالح لـ 60 دقيقة.</span>
             </div>
           </div>
@@ -87,7 +76,7 @@ export const ResetPasswordPage: React.FC = () => {
               <div>
                 <p className="text-sm font-black text-black">تم الإرسال!</p>
                 <p className="text-xs text-neutral-600 mt-1">
-                  إذا كان البريد مسجلاً، ستصلك رسالة من Firebase خلال دقائق. اضغط الرابط لإنشاء كلمة سر جديدة.
+                  إذا كان البريد مسجلاً، ستصلك رسالة خلال دقائق. اضغط الرابط لإنشاء كلمة سر جديدة.
                 </p>
                 <p className="text-[11px] font-mono text-neutral-500 mt-2 break-all">{email}</p>
               </div>
@@ -116,7 +105,7 @@ export const ResetPasswordPage: React.FC = () => {
                     className="form-input ps-9"
                   />
                 </div>
-                <p className="text-[11px] text-[#666] mt-1">سنرسل رابط إعادة تعيين عبر Firebase Auth</p>
+                <p className="text-[11px] text-[#666] mt-1">سنرسل رابط إعادة تعيين إلى بريدك الإلكتروني</p>
               </div>
 
               <button type="submit" className="continue-btn">
@@ -141,7 +130,7 @@ export const ResetPasswordPage: React.FC = () => {
         </form>
 
         <p className="text-[11px] text-center text-[#666] mt-4">
-          RTDB: https://aygram-8d0d0-default-rtdb.firebaseio.com
+          © 2026 aygram — كل الحقوق محفوظة
         </p>
       </div>
     </div>

@@ -10,33 +10,18 @@ export const VerifyOtpPage: React.FC = () => {
   const emailParam = searchParams.get('email') || '';
   const typeParam = (searchParams.get('type') as 'login' | 'register') || 'register';
 
-  const { confirmRegisterOtp, loginWithOtp, sendOtp, resendOtp, verifyOtp } = useAuth();
+  const { confirmRegisterOtp, loginWithOtp, sendOtp, resendOtp } = useAuth();
 
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string; code?: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [countdown, setCountdown] = useState(0);
-  const [initialCode, setInitialCode] = useState<string | null>(null);
 
   if (loading) {
     return <AppPageLoader message={typeParam === 'register' ? 'جاري تأكيد حسابك...' : 'جاري تسجيل الدخول...'} />;
   }
-
-  useEffect(() => {
-    if (emailParam) {
-      // Try to show demo code if exists in storage
-      try {
-        const stored = localStorage.getItem('aygram_auth_otp_v1');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          const rec = parsed[emailParam.toLowerCase()];
-          if (rec) setInitialCode(rec.code);
-        }
-      } catch {}
-    }
-  }, [emailParam]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -81,12 +66,10 @@ export const VerifyOtpPage: React.FC = () => {
       return;
     }
     setResendLoading(true);
-    // resend based on type
     const res = typeParam === 'register' ? await sendOtp(email, 'register') : await resendOtp(email);
     setResendLoading(false);
     if (res.success) {
-      setMessage({ type: 'success', text: res.message, code: res.code });
-      setInitialCode(res.code || null);
+      setMessage({ type: 'success', text: res.message });
       setCountdown(60);
     } else {
       setMessage({ type: 'error', text: res.message });
@@ -120,19 +103,6 @@ export const VerifyOtpPage: React.FC = () => {
             {message && (
               <div className={`p-3 rounded-xl text-sm border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
                 <div>{message.text}</div>
-                {message.code && (
-                  <div className="mt-2 p-2 bg-white rounded-lg border border-[#323232] text-center">
-                    <span className="text-xs text-emerald-600 block font-bold">✓ تم إرسال الرمز إلى بريدك عبر Firebase</span>
-                    <span className="text-[11px] text-neutral-500 block mt-1">تفقد بريدك — صالح لـ 5 دقائق</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {initialCode && !message?.code && (
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-sm">
-                <div className="text-blue-800 font-bold text-xs mb-1 flex items-center gap-1">✓ تم إرسال الرمز إلى بريدك</div>
-                <div className="text-[11px] text-blue-600 mt-1 text-center">تفقد بريدك الإلكتروني (وصندوق الرسائل المزعجة) — الرمز محفوظ في Firebase ومشفر</div>
               </div>
             )}
 

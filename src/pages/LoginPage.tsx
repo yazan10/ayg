@@ -15,7 +15,7 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string; code?: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   React.useEffect(() => {
     if (isAuthenticated) navigate('/');
@@ -36,7 +36,7 @@ export const LoginPage: React.FC = () => {
     const res = await sendOtp(email, 'login');
     setLoading(false);
     if (res.success) {
-      setMessage({ type: 'success', text: res.message, code: res.code });
+      setMessage({ type: 'success', text: res.message });
       setStep('otp');
     } else {
       setMessage({ type: 'error', text: res.message });
@@ -127,20 +127,14 @@ export const LoginPage: React.FC = () => {
             <button type="button" onClick={() => { setMode('password'); setMessage(null); }} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'password' ? 'bg-white text-[#323232] shadow' : 'text-white/70'}`}>Password</button>
           </div>
 
-          {message && (
-            <div className={`w-full p-3 rounded-lg text-sm border-2 flex items-start gap-2 ${message.type === 'error' ? 'bg-red-50 text-red-700 border-[#323232] shadow-[3px_3px_#323232]' : message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-[#323232] shadow-[3px_3px_#323232]' : 'bg-blue-50 text-blue-700 border-[#323232] shadow-[3px_3px_#323232]'}`}>
-              <span>{message.type === 'error' ? '⚠️' : '✅'}</span>
-              <div className="flex-1">
-                <span className="font-bold">{message.text}</span>
-                {message.code && (
-                  <div className="mt-2 p-2 bg-white rounded border-2 border-[#323232] text-center">
-                    <span className="text-xs text-emerald-600 block font-bold">✓ تم إرسال الرمز إلى بريدك عبر Firebase</span>
-                    <span className="text-[11px] text-neutral-500 block mt-1">تفقد بريدك (وصندوق الرسائل المزعجة) — صالح لـ 5 دقائق</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+           {message && (
+             <div className={`w-full p-3 rounded-lg text-sm border-2 flex items-start gap-2 ${message.type === 'error' ? 'bg-red-50 text-red-700 border-[#323232] shadow-[3px_3px_#323232]' : message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-[#323232] shadow-[3px_3px_#323232]' : 'bg-blue-50 text-blue-700 border-[#323232] shadow-[3px_3px_#323232]'}`}>
+               <span>{message.type === 'error' ? '⚠️' : '✅'}</span>
+               <div className="flex-1">
+                 <span className="font-bold">{message.text}</span>
+               </div>
+             </div>
+           )}
 
           {mode === 'otp' ? (
             step === 'email' ? (
@@ -156,8 +150,8 @@ export const LoginPage: React.FC = () => {
                   <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
                 </button>
 
-                <p className="text-xs text-center text-[#666] font-mono">
-                  Demo: yazan@aygram.com • sarah@aygram.com
+                <p className="text-xs text-center text-[#666]">
+                  yazan@aygram.com • sarah@aygram.com
                 </p>
               </>
             ) : (
@@ -213,7 +207,7 @@ export const LoginPage: React.FC = () => {
                 <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
               </button>
 
-              <p className="text-xs text-center text-[#666]">Demo: yazan@aygram.com / yaz@#5Y</p>
+              <p className="text-xs text-center text-[#666]">yazan@aygram.com / yaz@#5Y</p>
             </>
           )}
 

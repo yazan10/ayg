@@ -106,7 +106,7 @@ export const WelcomePage: React.FC = () => {
 
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-400 pt-2 border-t border-neutral-100">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span>آمن ومشفر — مدعوم من Firebase</span>
+                <span>آمن ومشفر</span>
                 <Sparkles className="w-3 h-3 text-amber-500" />
               </div>
             </div>

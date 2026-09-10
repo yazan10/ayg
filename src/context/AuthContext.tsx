@@ -487,7 +487,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return next;
     });
 
-    return { success: true, message: 'تم إنشاء حسابك بنجاح في Firebase! مرحباً بك في aygram' };
+    return { success: true, message: 'تم إنشاء حسابك بنجاح! مرحباً بك في aygram' };
   };
 
   const loginWithOtp = async (email: string, code: string): Promise<{ success: boolean; message: string }> => {
