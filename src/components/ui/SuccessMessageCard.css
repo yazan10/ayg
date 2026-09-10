@@ -1,0 +1,132 @@
+/* From Uiverse.io by akshat-patel28 - Success Message Card */
+.success-card {
+  width: 330px;
+  height: 80px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  background-color: #ffffff;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 15px;
+  border: 1px solid #e5e7eb;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.success-card .wave {
+  position: absolute;
+  transform: rotate(90deg);
+  left: -31px;
+  top: 32px;
+  width: 80px;
+  fill: #04e4003a;
+}
+
+.success-card .icon-container {
+  width: 35px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #04e40048;
+  border-radius: 50%;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.success-card .icon {
+  width: 17px;
+  height: 17px;
+  color: #269b24;
+}
+
+.success-card .message-text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  flex-grow: 1;
+}
+
+.success-card .message-text,
+.success-card .sub-text {
+  margin: 0;
+  cursor: default;
+}
+
+.success-card .message-text {
+  color: #269b24;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.success-card .sub-text {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.success-card .cross-icon {
+  width: 18px;
+  height: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.success-card .cross-icon:hover {
+  color: #374151;
+}
+
+/* Toast container */
+.success-toast-container {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.success-toast-container .success-card {
+  pointer-events: auto;
+  animation: slideInDown 0.35s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 640px) {
+  .success-card {
+    width: 92vw;
+    max-width: 330px;
+  }
+}

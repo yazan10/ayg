@@ -1,0 +1,309 @@
+/* Call Screen - Video & Audio */
+.call-screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 16px;
+}
+
+.call-screen-container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 640px;
+  max-height: 88vh;
+  background: #0f0f0f;
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.call-screen-container.audio {
+  height: 500px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.call-video-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.92;
+}
+
+.call-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.75) 100%);
+  pointer-events: none;
+}
+
+.call-header {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.call-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.call-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.call-status-dot.calling {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: pulse-dot 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.call-participant-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.call-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.call-avatar.audio-large {
+  width: 110px;
+  height: 110px;
+  border-width: 4px;
+}
+
+.call-name {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.call-username {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Tajawal', sans-serif;
+  margin-top: -6px;
+}
+
+.call-duration {
+  font-family: 'Tajawal', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  letter-spacing: 0.05em;
+}
+
+.call-audio-visual {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.call-audio-waves {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 60px;
+}
+
+.call-audio-waves span {
+  width: 4px;
+  background: linear-gradient(to top, #38bdf8, #2563eb);
+  border-radius: 999px;
+  animation: audio-wave 0.7s ease-in-out infinite;
+}
+
+.call-audio-waves span:nth-child(1) { height: 20px; animation-delay: 0s; }
+.call-audio-waves span:nth-child(2) { height: 36px; animation-delay: 0.1s; }
+.call-audio-waves span:nth-child(3) { height: 48px; animation-delay: 0.2s; }
+.call-audio-waves span:nth-child(4) { height: 32px; animation-delay: 0.15s; }
+.call-audio-waves span:nth-child(5) { height: 24px; animation-delay: 0.05s; }
+
+@keyframes audio-wave {
+  0%, 100% { transform: scaleY(0.6); opacity: 0.7; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+.call-pip {
+  position: absolute;
+  bottom: 100px;
+  right: 16px;
+  width: 90px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 3;
+  background: #1a1a1a;
+}
+
+.call-pip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.call-pip.camera-off {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2a;
+  color: #666;
+}
+
+.call-controls {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+}
+
+.call-control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  font-size: 18px;
+}
+
+.call-control-btn.mute {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.call-control-btn.mute.active {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #f59e0b;
+}
+
+.call-control-btn.camera {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.call-control-btn.camera.off {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+.call-control-btn.speaker {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.call-control-btn.speaker.active {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.call-control-btn.end {
+  width: 56px;
+  height: 56px;
+  background: #ef4444;
+  color: #fff;
+  border: 1px solid #ef4444;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+
+.call-control-btn.end:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.call-control-btn:hover {
+  transform: scale(1.05);
+}
+
+.call-control-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 480px) {
+  .call-screen-container {
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    max-width: 100%;
+  }
+
+  .call-screen-container.audio {
+    height: 100vh;
+  }
+}

@@ -1,0 +1,427 @@
+import express, { Request, Response } from 'express';
+import path from 'path';
+import { createServer as createViteServer } from 'vite';
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+
+// In-memory data store seeded for backend REST API
+const apiData: any = {
+  currencies: {
+    SAR: { code: 'SAR', symbol: 'ر.س', rateFromSAR: 1, name: 'Saudi Riyal' },
+    ILS: { code: 'ILS', symbol: '₪', rateFromSAR: 1.0, name: 'Shekel' },
+    JOD: { code: 'JOD', symbol: 'د.أ', rateFromSAR: 0.189, name: 'Jordanian Dinar' },
+    USD: { code: 'USD', symbol: '$', rateFromSAR: 0.267, name: 'US Dollar' }
+  },
+  wallet: {
+    balanceSAR: 4850.00,
+    totalEarnedSAR: 18450.00,
+    salesEarningsSAR: 12600.00,
+    liveGiftsEarningsSAR: 5850.00
+  },
+  subscriptionPricing: {
+    storeActivationILS: 30,
+    accountVerificationILS: 25,
+    goldBadgeILS: 50,
+    currency: 'ILS',
+    updatedAt: new Date().toISOString(),
+  },
+  stores: [
+    { id: 'store-1', username: 'nokhba_oud', name: 'نخبة العود والمسك', verified: true, subscription: { status: 'active', isActive: true, pricePaidILS: 30, expiresAt: new Date(Date.now() + 20*24*60*60*1000).toISOString() }, storeType: 'verified_store' },
+    { id: 'store-2', username: 'roshana_fashion', name: 'روشانا ستايل', verified: true, subscription: { status: 'active', isActive: true, pricePaidILS: 30, expiresAt: new Date(Date.now() + 25*24*60*60*1000).toISOString() }, storeType: 'verified_store' },
+    { id: 'store-3', username: 'roast_artisan', name: 'محمصة أرتيزان', verified: true, subscription: { status: 'active', isActive: true, pricePaidILS: 30, expiresAt: new Date(Date.now() + 10*24*60*60*1000).toISOString() }, storeType: 'verified_store' },
+    { id: 'store-4', username: 'gadget_zone_tech', name: 'جادجيت زون', verified: false, subscription: { status: 'expired', isActive: false, pricePaidILS: 30, expiresAt: new Date(Date.now() - 15*24*60*60*1000).toISOString() }, storeType: 'pending_store' },
+  ],
+  users: [
+    { id: 'user-me', username: 'ayzan_official', name: 'يزن صلاق', verificationTier: 'gold', verification: { tier: 'gold', isActive: true, pricePaidILS: 50 } },
+    { id: 'user-sarah', username: 'sarah_fashion_vibes', name: 'سارة العتيبي', verificationTier: 'blue', verification: { tier: 'blue', isActive: true, pricePaidILS: 25 } },
+    { id: 'user-fahad', username: 'fahad_tech', name: 'فهد التقني', verificationTier: 'blue', verification: { tier: 'blue', isActive: true, pricePaidILS: 25 } },
+    { id: 'user-mona', username: 'mona_coffeelover', name: 'منى بريستا', verificationTier: 'none', verification: { tier: 'none', isActive: false, pricePaidILS: 0 } },
+  ],
+  liveStreams: [
+    {
+      id: 'live-1',
+      username: 'sarah_fashion_vibes',
+      name: 'سارة العتيبي',
+      title: 'بث حي: استعراض تشكيلة فساتين الصيف وتنسيقات الألوان الجديدة 🔥💃',
+      viewerCount: 2840,
+      likesCount: 19400,
+      isLive: true,
+      category: 'أزياء وجمال'
+    },
+    {
+      id: 'live-2',
+      username: 'nokhba_oud',
+      name: 'نخبة العود والمسك',
+      title: 'تعتيق العود الملكي مباشرة من المعمل السري 👑 تجربة البخور النادر',
+      viewerCount: 1530,
+      likesCount: 14200,
+      isLive: true,
+      category: 'عطور وبخور'
+    }
+  ]
+};
+
+// ----------------------------------------------------
+// REST API ROUTES
+// ----------------------------------------------------
+
+// 1. Health & Server Info
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    service: 'aygram Core API Engine',
+    version: '2.5.0',
+    timestamp: new Date().toISOString(),
+    supportedCurrencies: ['SAR', 'ILS', 'JOD', 'USD']
+  });
+});
+
+// 2. Currencies & Exchange Rates
+app.get('/api/currencies', (req: Request, res: Response) => {
+  res.json({
+    baseCurrency: 'SAR',
+    rates: apiData.currencies,
+    updatedAt: new Date().toISOString()
+  });
+});
+
+// 3. Live Streaming Endpoints
+app.get('/api/live', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    streams: apiData.liveStreams,
+    totalLive: apiData.liveStreams.length
+  });
+});
+
+app.post('/api/live/start', (req: Request, res: Response) => {
+  const { title, category, username, name } = req.body;
+  const newStream = {
+    id: `live-${Date.now()}`,
+    username: username || 'ayzan_official',
+    name: name || 'يزن صلاق',
+    title: title || 'بث مباشر جديد على aygram',
+    viewerCount: 1,
+    likesCount: 0,
+    isLive: true,
+    category: category || 'عام'
+  };
+  apiData.liveStreams.unshift(newStream);
+  res.status(201).json({
+    success: true,
+    message: 'Live stream broadcast started successfully',
+    stream: newStream
+  });
+});
+
+app.post('/api/live/:id/gift', (req: Request, res: Response) => {
+  const { giftName, priceSAR, senderUsername } = req.body;
+  const amount = Number(priceSAR) || 10;
+  apiData.wallet.balanceSAR += amount;
+  apiData.wallet.totalEarnedSAR += amount;
+  apiData.wallet.liveGiftsEarningsSAR += amount;
+
+  res.json({
+    success: true,
+    message: `Gift ${giftName || 'Gift'} sent successfully!`,
+    sender: senderUsername || 'user',
+    amountCreditedSAR: amount,
+    newWalletBalanceSAR: apiData.wallet.balanceSAR
+  });
+});
+
+// 4. Creator Wallet & Earnings Endpoints
+app.get('/api/wallet', (req: Request, res: Response) => {
+  const currency = (req.query.currency as string) || 'SAR';
+  const rate = apiData.currencies[currency as keyof typeof apiData.currencies]?.rateFromSAR || 1;
+  const symbol = apiData.currencies[currency as keyof typeof apiData.currencies]?.symbol || 'ر.س';
+
+  res.json({
+    success: true,
+    currency,
+    symbol,
+    balance: Number((apiData.wallet.balanceSAR * rate).toFixed(2)),
+    totalEarned: Number((apiData.wallet.totalEarnedSAR * rate).toFixed(2)),
+    salesEarnings: Number((apiData.wallet.salesEarningsSAR * rate).toFixed(2)),
+    liveGiftsEarnings: Number((apiData.wallet.liveGiftsEarningsSAR * rate).toFixed(2)),
+    baseBalanceSAR: apiData.wallet.balanceSAR
+  });
+});
+
+app.post('/api/wallet/withdraw', (req: Request, res: Response) => {
+  const { amountSAR, method, recipientDetails } = req.body;
+  const requested = Number(amountSAR);
+
+  if (!requested || requested <= 0) {
+    return res.status(400).json({ success: false, error: 'Invalid withdrawal amount' });
+  }
+
+  if (requested > apiData.wallet.balanceSAR) {
+    return res.status(400).json({ success: false, error: 'Insufficient balance in wallet' });
+  }
+
+  apiData.wallet.balanceSAR -= requested;
+
+  res.json({
+    success: true,
+    message: 'Withdrawal request submitted successfully',
+    transactionId: `tx-w-${Date.now()}`,
+    withdrawnSAR: requested,
+    remainingBalanceSAR: apiData.wallet.balanceSAR,
+    payoutMethod: method || 'Bank Transfer (IBAN)',
+    recipient: recipientDetails || 'Registered IBAN Account',
+    status: 'processing'
+  });
+});
+
+// 5. Auth & OTP System (Email + OTP + Username/Password)
+const authUsers: Array<{ id: string; name: string; username: string; email: string; password: string; avatar: string; verified: boolean; createdAt: string }> = [
+  { id: 'user-me', name: 'يزن صلاق', username: 'ayzan_official', email: 'yazan@aygram.com', password: 'yaz@#5Y', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300', verified: true, createdAt: '2024-01-01' },
+  { id: 'user-sarah', name: 'سارة العتيبي', username: 'sarah_fashion_vibes', email: 'sarah@aygram.com', password: 'sarah123', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300', verified: true, createdAt: '2024-02-01' },
+];
+const otpStore: Record<string, { code: string; expiresAt: number; type: 'login' | 'register'; pendingData?: any }> = {};
+const generateOtpCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+app.post('/api/auth/send-otp', (req: Request, res: Response) => {
+  const { email, type } = req.body;
+  const normalized = (email || '').trim().toLowerCase();
+  if (!normalized || !normalized.includes('@')) return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
+  if (type === 'login') {
+    const exists = authUsers.find(u => u.email.toLowerCase() === normalized);
+    if (!exists) return res.status(404).json({ success: false, message: 'البريد غير مسجل، الرجاء إنشاء حساب جديد' });
+  }
+  if (type === 'register') {
+    const exists = authUsers.find(u => u.email.toLowerCase() === normalized);
+    if (exists) return res.status(400).json({ success: false, message: 'البريد مسجل مسبقاً' });
+  }
+  const code = generateOtpCode();
+  otpStore[normalized] = { code, expiresAt: Date.now() + 5 * 60 * 1000, type: type || 'login' };
+  console.log(`[aygram OTP] ${type} for ${normalized}: ${code}`);
+  res.json({ success: true, message: type === 'login' ? 'تم إرسال رمز الدخول إلى بريدك' : 'تم إرسال رمز التأكيد إلى بريدك', demoCode: code, expiresIn: 300 });
+});
+
+app.post('/api/auth/register', (req: Request, res: Response) => {
+  const { name, username, email, password, confirmPassword, avatar, nationality, nationalityNameAr } = req.body;
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  const normalizedUsername = (username || '').trim().toLowerCase().replace(/^@/, '');
+  if (!name || !normalizedUsername || !normalizedEmail || !password) return res.status(400).json({ success: false, message: 'الرجاء تعبئة جميع الحقول' });
+  if (password !== confirmPassword) return res.status(400).json({ success: false, message: 'كلمة المرور وتأكيدها غير متطابقتين' });
+  if (password.length < 6) return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+  if (normalizedUsername.length < 3) {
+    if (normalizedUsername.length === 2) return res.status(400).json({ success: false, message: 'اليوزر من حرفين يتطلب طلب حجز خاص', needsReservation: true });
+    return res.status(400).json({ success: false, message: 'اليوزر يجب أن يكون 3 أحرف على الأقل' });
+  }
+  if (!/^[a-z0-9_.]+$/.test(normalizedUsername)) return res.status(400).json({ success: false, message: 'اسم المستخدم يجب أن يحتوي أحرف إنجليزية وأرقام فقط' });
+  if (authUsers.find(u => u.email.toLowerCase() === normalizedEmail)) return res.status(400).json({ success: false, message: 'البريد مسجل مسبقاً' });
+  if (authUsers.find(u => u.username.toLowerCase() === normalizedUsername)) return res.status(400).json({ success: false, message: 'اسم المستخدم محجوز' });
+  const code = generateOtpCode();
+  otpStore[normalizedEmail] = { code, expiresAt: Date.now() + 5 * 60 * 1000, type: 'register', pendingData: { name: name.trim(), username: normalizedUsername, email: normalizedEmail, password, avatar, nationality, nationalityNameAr } };
+  console.log(`[aygram REGISTER OTP] for ${normalizedEmail}: ${code}`);
+  res.json({ success: true, message: 'تم إرسال رمز التأكيد إلى بريدك', demoCode: code, needOtp: true, email: normalizedEmail });
+});
+
+// Check username availability - Server verification
+app.get('/api/auth/check-username', (req: Request, res: Response) => {
+  const username = ((req.query.username as string) || '').trim().toLowerCase().replace(/^@/, '');
+  if (!username) return res.json({ available: false, message: 'أدخل اليوزر', isShort: true });
+  if (username.length < 2) return res.json({ available: false, message: 'قصير جداً — حرفين يحتاج حجز', needsReservation: true, isShort: true });
+  if (username.length === 2) return res.json({ available: false, message: 'اليوزرات بحرفين محجوزة — قدم طلب حجز', needsReservation: true, isShort: true });
+  if (username.length < 3) return res.json({ available: false, message: 'الحد الأدنى 3 أحرف', isShort: true });
+  if (!/^[a-z0-9_.]+$/.test(username)) return res.json({ available: false, message: 'أحرف إنجليزية وأرقام ونقطة فقط' });
+  const exists = authUsers.find(u => u.username.toLowerCase() === username);
+  if (exists) return res.json({ available: false, message: 'اليوزر محجوز ✕' });
+  return res.json({ available: true, message: 'اليوزر متاح ✓' });
+});
+
+// Reserve 2-char username
+const usernameReservations: Array<{ username: string; email: string; createdAt: string }> = [];
+app.post('/api/auth/reserve-username', (req: Request, res: Response) => {
+  const { username, email } = req.body;
+  const normalized = (username || '').trim().toLowerCase().replace(/^@/, '');
+  if (normalized.length !== 2) return res.status(400).json({ success: false, message: 'الحجز فقط لليوزرات بحرفين' });
+  if (!/^[a-z0-9_.]+$/.test(normalized)) return res.status(400).json({ success: false, message: 'يوزر غير صالح' });
+  if (authUsers.find(u => u.username.toLowerCase() === normalized)) return res.status(400).json({ success: false, message: 'اليوزر محجوز بالفعل' });
+  if (usernameReservations.find(r => r.username === normalized)) return res.status(400).json({ success: false, message: 'تم تقديم طلب حجز مسبقاً لهذا اليوزر' });
+  usernameReservations.push({ username: normalized, email: (email || '').trim().toLowerCase(), createdAt: new Date().toISOString() });
+  console.log(`[aygram RESERVE] ${normalized} for ${email}`);
+  res.json({ success: true, message: `تم استلام طلب حجز اليوزر "${normalized}" — سيتم مراجعته خلال 24 ساعة` });
+});
+
+app.post('/api/auth/verify-register', (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  const normalized = (email || '').trim().toLowerCase();
+  const record = otpStore[normalized];
+  if (!record || record.type !== 'register' || !record.pendingData) return res.status(400).json({ success: false, message: 'لا يوجد طلب تسجيل معلق' });
+  if (Date.now() > record.expiresAt) { delete otpStore[normalized]; return res.status(400).json({ success: false, message: 'انتهت صلاحية الرمز' }); }
+  if (record.code !== (code || '').trim()) return res.status(400).json({ success: false, message: 'الرمز غير صحيح' });
+  const pending = record.pendingData;
+  const avatarToUse = pending.avatar && pending.avatar.trim() ? pending.avatar.trim() : `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300`;
+  const newUser: any = { id: `user-${Date.now()}`, name: pending.name, username: pending.username, email: pending.email, password: pending.password, avatar: avatarToUse, verified: true, createdAt: new Date().toISOString().split('T')[0], nationality: pending.nationality, nationalityNameAr: pending.nationalityNameAr };
+  authUsers.push(newUser);
+  delete otpStore[normalized];
+  res.json({ success: true, message: 'تم إنشاء الحساب بنجاح! مرحباً بك في aygram', user: { id: newUser.id, name: newUser.name, username: newUser.username, email: newUser.email, avatar: newUser.avatar, verified: newUser.verified }, token: `aygram_token_${Date.now()}` });
+});
+
+app.post('/api/auth/verify-login', (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  const normalized = (email || '').trim().toLowerCase();
+  const record = otpStore[normalized];
+  if (!record || record.type !== 'login') return res.status(400).json({ success: false, message: 'الرجاء طلب رمز الدخول أولاً' });
+  if (Date.now() > record.expiresAt) { delete otpStore[normalized]; return res.status(400).json({ success: false, message: 'انتهت صلاحية الرمز' }); }
+  if (record.code !== (code || '').trim()) return res.status(400).json({ success: false, message: 'الرمز غير صحيح' });
+  const user = authUsers.find(u => u.email.toLowerCase() === normalized);
+  if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+  delete otpStore[normalized];
+  res.json({ success: true, message: `مرحباً بعودتك ${user.name}!`, user: { id: user.id, name: user.name, username: user.username, email: user.email, avatar: user.avatar, verified: user.verified }, token: `aygram_token_${Date.now()}` });
+});
+
+app.post('/api/auth/login-password', (req: Request, res: Response) => {
+  const { emailOrUsername, password } = req.body;
+  const normalized = (emailOrUsername || '').trim().toLowerCase();
+  const user = authUsers.find(u => u.email.toLowerCase() === normalized || u.username.toLowerCase() === normalized);
+  if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+  if (user.password !== password) return res.status(401).json({ success: false, message: 'كلمة المرور غير صحيحة' });
+  res.json({ success: true, message: `مرحباً ${user.name}!`, user: { id: user.id, name: user.name, username: user.username, email: user.email, avatar: user.avatar, verified: user.verified }, token: `aygram_token_${Date.now()}` });
+});
+
+app.get('/api/auth/users', (req: Request, res: Response) => {
+  res.json({ success: true, users: authUsers.map(u => ({ id: u.id, name: u.name, username: u.username, email: u.email, avatar: u.avatar, verified: u.verified, createdAt: u.createdAt })), total: authUsers.length });
+});
+
+// 6. Subscriptions & Pricing - فصل المتاجر عن الحسابات
+app.get('/api/pricing', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    pricing: apiData.subscriptionPricing,
+    plans: {
+      storeActivation: { nameAr: 'تفعيل المتجر', nameEn: 'Store Activation', priceILS: apiData.subscriptionPricing.storeActivationILS, interval: 'monthly', section: 'stores', descriptionAr: 'تفعيل متجرك للبيع لمدة 30 يوم', descriptionEn: 'Activate store for 30 days' },
+      accountVerification: { nameAr: 'توثيق الحساب', nameEn: 'Blue Verification', priceILS: apiData.subscriptionPricing.accountVerificationILS, interval: 'monthly', section: 'accounts', descriptionAr: 'علامة زرقاء للحسابات', descriptionEn: 'Blue badge for accounts' },
+      goldBadge: { nameAr: 'العلامة الزرقاء الذهبية', nameEn: 'Gold Blue Badge', priceILS: apiData.subscriptionPricing.goldBadgeILS, interval: 'monthly', section: 'accounts', descriptionAr: 'علامة ذهبية مميزة', descriptionEn: 'Premium gold badge' },
+    },
+    separatedSections: {
+      stores: { titleAr: 'قسم المتاجر', titleEn: 'Stores Section', count: apiData.stores.length, active: apiData.stores.filter((s: any) => s.subscription?.isActive).length },
+      accounts: { titleAr: 'قسم الحسابات', titleEn: 'Accounts Section', count: apiData.users.length, verified: apiData.users.filter((u: any) => u.verification?.isActive).length },
+    }
+  });
+});
+
+app.post('/api/pricing/update', (req: Request, res: Response) => {
+  const { storeActivationILS, accountVerificationILS, goldBadgeILS } = req.body;
+  if (storeActivationILS !== undefined) apiData.subscriptionPricing.storeActivationILS = Number(storeActivationILS);
+  if (accountVerificationILS !== undefined) apiData.subscriptionPricing.accountVerificationILS = Number(accountVerificationILS);
+  if (goldBadgeILS !== undefined) apiData.subscriptionPricing.goldBadgeILS = Number(goldBadgeILS);
+  apiData.subscriptionPricing.updatedAt = new Date().toISOString();
+  res.json({ success: true, message: 'تم تحديث الأسعار بنجاح', pricing: apiData.subscriptionPricing });
+});
+
+app.get('/api/stores', (req: Request, res: Response) => {
+  const filter = req.query.filter as string;
+  let result = apiData.stores;
+  if (filter === 'active') result = result.filter((s: any) => s.subscription?.isActive);
+  if (filter === 'expired') result = result.filter((s: any) => !s.subscription?.isActive);
+  res.json({ success: true, section: 'stores_separated', total: apiData.stores.length, active: apiData.stores.filter((s: any) => s.subscription?.isActive).length, stores: result, pricing: { activationILS: apiData.subscriptionPricing.storeActivationILS } });
+});
+
+app.post('/api/stores/:id/activate', (req: Request, res: Response) => {
+  const store = apiData.stores.find((s: any) => s.id === req.params.id);
+  if (!store) return res.status(404).json({ success: false, error: 'Store not found' });
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  store.subscription = { status: 'active', isActive: true, startedAt: now.toISOString(), expiresAt: expiresAt.toISOString(), pricePaidILS: apiData.subscriptionPricing.storeActivationILS, autoRenew: true, planId: 'store_monthly' };
+  store.storeType = 'verified_store';
+  store.verified = true;
+  res.json({ success: true, message: `تم تفعيل المتجر ${store.name} لمدة 30 يوم مقابل ${store.subscription.pricePaidILS}₪`, store, expiresAt: store.subscription.expiresAt });
+});
+
+app.post('/api/stores/:id/cancel', (req: Request, res: Response) => {
+  const store = apiData.stores.find((s: any) => s.id === req.params.id);
+  if (!store) return res.status(404).json({ success: false, error: 'Store not found' });
+  if (store.subscription) { store.subscription.status = 'expired'; store.subscription.isActive = false; store.subscription.autoRenew = false; }
+  store.storeType = 'pending_store';
+  res.json({ success: true, message: 'تم إلغاء اشتراك المتجر', store });
+});
+
+app.get('/api/accounts', (req: Request, res: Response) => {
+  const filter = req.query.filter as string;
+  let result = apiData.users;
+  if (filter === 'verified') result = result.filter((u: any) => u.verification?.isActive);
+  if (filter === 'gold') result = result.filter((u: any) => u.verification?.tier === 'gold' && u.verification?.isActive);
+  if (filter === 'blue') result = result.filter((u: any) => u.verification?.tier === 'blue' && u.verification?.isActive);
+  res.json({ success: true, section: 'accounts_separated', total: apiData.users.length, verified: apiData.users.filter((u: any) => u.verification?.isActive).length, accounts: result, pricing: { verificationILS: apiData.subscriptionPricing.accountVerificationILS, goldBadgeILS: apiData.subscriptionPricing.goldBadgeILS } });
+});
+
+app.post('/api/accounts/:id/verify', (req: Request, res: Response) => {
+  const { tier } = req.body; // 'blue' | 'gold'
+  const user = apiData.users.find((u: any) => u.id === req.params.id);
+  if (!user) return res.status(404).json({ success: false, error: 'Account not found' });
+  if (!['blue', 'gold'].includes(tier)) return res.status(400).json({ success: false, error: 'Invalid tier' });
+  const priceILS = tier === 'gold' ? apiData.subscriptionPricing.goldBadgeILS : apiData.subscriptionPricing.accountVerificationILS;
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  user.verification = { tier, isActive: true, startedAt: now.toISOString(), expiresAt: expiresAt.toISOString(), pricePaidILS: priceILS, autoRenew: true };
+  user.verificationTier = tier as any;
+  user.verified = true;
+  res.json({ success: true, message: tier === 'gold' ? `تم تفعيل العلامة الذهبية مقابل ${priceILS}₪` : `تم توثيق الحساب مقابل ${priceILS}₪`, user, expiresAt: user.verification.expiresAt });
+});
+
+app.post('/api/accounts/:id/cancel-verification', (req: Request, res: Response) => {
+  const user = apiData.users.find((u: any) => u.id === req.params.id);
+  if (!user) return res.status(404).json({ success: false, error: 'Account not found' });
+  user.verification = { tier: 'none', isActive: false, pricePaidILS: 0, autoRenew: false };
+  user.verificationTier = 'none';
+  user.verified = false;
+  res.json({ success: true, message: 'تم إلغاء التوثيق', user });
+});
+
+// 7. Admin & Security Verification
+app.post('/api/admin/verify', (req: Request, res: Response) => {
+  const { username, password } = req.body;
+  // Match admin password to username or master keys
+  if (
+    password === username ||
+    password === 'ayzan_official' ||
+    password === 'yaz@#5Y' ||
+    password === 'admin'
+  ) {
+    return res.json({
+      success: true,
+      authorized: true,
+      role: 'superadmin',
+      token: `aygram_admin_token_${Date.now()}`
+    });
+  }
+  return res.status(401).json({
+    success: false,
+    authorized: false,
+    error: 'Invalid admin credentials'
+  });
+});
+
+// ----------------------------------------------------
+// VITE SPA MIDDLEWARE / STATIC SERVING
+// ----------------------------------------------------
+
+async function startServer() {
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`aygram API & Dev Server active at http://0.0.0.0:${PORT}`);
+  });
+}
+
+startServer();

@@ -1,0 +1,189 @@
+/* From Uiverse.io by Nawsome - Adapted for aygram */
+.skeleton-loader {
+  position: relative;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  padding: 15px;
+  background-color: #e3e3e3;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.skeleton-loader::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(
+    110deg,
+    rgba(227, 227, 227, 0) 0%,
+    rgba(227, 227, 227, 0) 40%,
+    rgba(227, 227, 227, 0.5) 50%,
+    rgba(227, 227, 227, 0) 60%,
+    rgba(227, 227, 227, 0) 100%
+  );
+  animation: gradient-animation_2 1.2s linear infinite;
+}
+
+.skeleton-loader .wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.skeleton-loader .wrapper > div {
+  background-color: #cacaca;
+  border-radius: 4px;
+}
+
+.skeleton-loader .circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #cacaca;
+}
+
+.skeleton-loader .line-1 {
+  position: absolute;
+  top: 11px;
+  left: 58px;
+  height: 10px;
+  width: 100px;
+  border-radius: 4px;
+}
+
+.skeleton-loader .line-2 {
+  position: absolute;
+  top: 34px;
+  left: 58px;
+  height: 10px;
+  width: 150px;
+  border-radius: 4px;
+}
+
+.skeleton-loader .line-3 {
+  position: absolute;
+  top: 57px;
+  left: 0px;
+  height: 10px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeleton-loader .line-4 {
+  position: absolute;
+  top: 80px;
+  left: 0px;
+  height: 10px;
+  width: 92%;
+  border-radius: 4px;
+}
+
+@keyframes gradient-animation_2 {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Variants */
+.skeleton-post {
+  height: 420px;
+  margin-bottom: 16px;
+}
+
+.skeleton-post .wrapper {
+  height: 100%;
+}
+
+.skeleton-post-image {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background-color: #cacaca;
+  border-radius: 8px;
+}
+
+.skeleton-post-actions {
+  position: absolute;
+  bottom: 45px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.skeleton-post-actions span {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #cacaca;
+}
+
+.skeleton-post-caption {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  height: 10px;
+  width: 75%;
+  background-color: #cacaca;
+  border-radius: 4px;
+}
+
+.skeleton-account {
+  height: 130px;
+  margin-bottom: 12px;
+}
+
+.skeleton-chat {
+  height: 80px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+}
+
+.skeleton-chat .chat-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #cacaca;
+  flex-shrink: 0;
+}
+
+.skeleton-chat .chat-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-chat .chat-line-short {
+  height: 10px;
+  width: 100px;
+  background-color: #cacaca;
+  border-radius: 4px;
+}
+
+.skeleton-chat .chat-line-long {
+  height: 10px;
+  width: 180px;
+  background-color: #cacaca;
+  border-radius: 4px;
+}
+
+.skeleton-chat .chat-time {
+  width: 40px;
+  height: 10px;
+  background-color: #cacaca;
+  border-radius: 4px;
+}

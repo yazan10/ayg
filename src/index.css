@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary-blue: #2563eb; /* Royal Blue */
+    --primary-blue-hover: #1d4ed8;
+    --primary-blue-light: #eff6ff;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    color: #0f172a;
+    background-color: #f8fafc;
+    background-image: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.06) 0%, transparent 55%);
+    background-attachment: fixed;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: contain;
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent auto-zoom on mobile inputs - must be 16px */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  @media (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Instagram Story Gradient Ring with Royal Blue & Cyan Accents */
+.story-ring {
+  background: linear-gradient(45deg, #1d4ed8, #2563eb, #38bdf8, #6366f1);
+}
+
+.story-ring-seen {
+  background: #d1d5db;
+}
+
+/* Hide scrollbar for stories reel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Modern Page Transition */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Focus Ring - Modern */
+*:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Responsive - All Devices - Latest Coordination */
+.container-responsive {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding: 0 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding: 0 32px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container-responsive {
+    max-width: 1440px;
+  }
+}
+
+/* Fluid Typography */
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+h2 {
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+}
+
+/* Responsive Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Touch Target - Minimum 44px for mobile */
+@media (max-width: 640px) {
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  button span,
+  a span {
+    min-height: auto;
+    min-width: auto;
+  }
+}
+
+/* Prevent horizontal scroll */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Admin Dashboard Exclusive Font */
+.admin-font {
+  font-family: 'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.admin-font h1,
+.admin-font h2,
+.admin-font h3 {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.admin-font button,
+.admin-font .font-black {
+  font-family: 'Tajawal', sans-serif;
+}
+.admin-title {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "aygram - Social & Store Platform",
+  "description": "منصة تواصل اجتماعي رائدة تجمع ريلز، رسائل مباشرة، منشورات، وقصص تفاعلية مع نظام متاجر متكامل ولوحة تحكم متطورة بتخزين لحظي متوافق مع فيرسال",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

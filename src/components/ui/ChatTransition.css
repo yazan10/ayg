@@ -1,0 +1,112 @@
+/* From Uiverse.io by SmookyDev - Adapted for chat transition */
+.chat-transition-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.chat-transition-overlay .center_div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+  transform: scale(0.65);
+}
+
+.chat-transition-overlay .wave {
+  width: 1.8rem;
+  height: 70px;
+  background: linear-gradient(180deg, #2563eb 0%, #38bdf8 50%, #0ea5e9 100%);
+  margin: 0 4px;
+  border-radius: 0.4rem;
+  animation: wave 0.9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes wave {
+  0% {
+    transform: scaleY(0.3);
+    filter: hue-rotate(0deg) blur(1px);
+    opacity: 0.6;
+  }
+  25% {
+    transform: scaleY(0.6);
+    filter: hue-rotate(20deg) blur(0.5px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleY(1);
+    filter: hue-rotate(0deg) blur(0px);
+    opacity: 1;
+  }
+  75% {
+    transform: scaleY(0.6);
+    filter: hue-rotate(-10deg) blur(0.5px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scaleY(0.3);
+    filter: hue-rotate(0deg) blur(1px);
+    opacity: 0.6;
+  }
+}
+
+.chat-transition-overlay .wave:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.chat-transition-overlay .wave:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.chat-transition-overlay .wave:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.chat-transition-overlay .wave:nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+.chat-transition-overlay .wave:nth-child(5) {
+  animation-delay: 0.32s;
+}
+
+.chat-transition-overlay .wave:nth-child(6) {
+  animation-delay: 0.4s;
+}
+
+.chat-transition-overlay .wave:nth-child(7) {
+  animation-delay: 0.48s;
+}
+
+.chat-transition-overlay .wave:nth-child(8) {
+  animation-delay: 0.56s;
+}
+
+.chat-transition-overlay .wave:nth-child(9) {
+  animation-delay: 0.64s;
+}
+
+.chat-transition-overlay .wave:nth-child(10) {
+  animation-delay: 0.72s;
+}
+
+@media (max-width: 640px) {
+  .chat-transition-overlay .center_div {
+    transform: scale(0.5);
+  }
+
+  .chat-transition-overlay .wave {
+    width: 1.4rem;
+    height: 55px;
+    margin: 0 3px;
+  }
+}

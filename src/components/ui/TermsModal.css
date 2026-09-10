@@ -1,0 +1,259 @@
+/* From Uiverse.io by Admin12121 - Terms and Services Modal */
+.terms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.terms-modal-overlay .modal {
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.terms-modal-overlay .modal-container {
+  max-height: 85vh;
+  max-width: 500px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 30px 0 rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 600px) {
+  .terms-modal-overlay .modal-container {
+    width: 95%;
+    max-height: 90vh;
+  }
+}
+
+.terms-modal-overlay .modal-container-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.terms-modal-overlay .modal-container-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-family: 'Tajawal', 'Cairo', sans-serif;
+  color: #111827;
+}
+
+.terms-modal-overlay .modal-container-title svg {
+  width: 28px;
+  height: 28px;
+  color: #750550;
+  flex-shrink: 0;
+}
+
+.terms-modal-overlay .modal-container-body {
+  padding: 20px 24px 40px;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.terms-modal-overlay .modal-container-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terms-modal-overlay .modal-container-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+.terms-modal-overlay .rtf {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #374151;
+}
+
+.terms-modal-overlay .rtf h1,
+.terms-modal-overlay .rtf h2,
+.terms-modal-overlay .rtf h3,
+.terms-modal-overlay .rtf h4 {
+  font-weight: 800;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  color: #111827;
+}
+
+.terms-modal-overlay .rtf h2 {
+  font-size: 1rem;
+  margin-top: 1.5em;
+  color: #750550;
+  border-bottom: 1px solid #f3e8ff;
+  padding-bottom: 6px;
+}
+
+.terms-modal-overlay .rtf h3 {
+  font-size: 0.9rem;
+  color: #1e40af;
+}
+
+.terms-modal-overlay .rtf > * + * {
+  margin-top: 0.85em;
+}
+
+.terms-modal-overlay .rtf > * + :is(h1, h2, h3) {
+  margin-top: 1.5em;
+}
+
+.terms-modal-overlay .rtf > :is(h1, h2, h3) + * {
+  margin-top: 0.5em;
+}
+
+.terms-modal-overlay .rtf ul,
+.terms-modal-overlay .rtf ol {
+  margin-left: 18px;
+  margin-right: 18px;
+  list-style-position: outside;
+  padding-left: 4px;
+}
+
+.terms-modal-overlay .rtf ol {
+  list-style: numeric;
+}
+
+.terms-modal-overlay .rtf ul {
+  list-style: disc;
+}
+
+.terms-modal-overlay .rtf li {
+  margin-top: 0.35em;
+}
+
+.terms-modal-overlay .rtf strong {
+  color: #111827;
+  font-weight: 700;
+}
+
+.terms-modal-overlay .rtf .highlight-box {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 0.8rem;
+}
+
+.terms-modal-overlay .rtf .highlight-box.red {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.terms-modal-overlay .modal-container-footer {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1px solid #e5e7eb;
+  gap: 12px;
+  position: relative;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.terms-modal-overlay .modal-container-footer:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -50px;
+  left: 24px;
+  right: 24px;
+  height: 50px;
+  flex-shrink: 0;
+  background-image: linear-gradient(to top, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
+}
+
+.terms-modal-overlay .button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: transparent;
+  border: 0;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s ease;
+  font-family: 'Tajawal', sans-serif;
+  font-size: 0.875rem;
+}
+
+.terms-modal-overlay .button.is-ghost {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.terms-modal-overlay .button.is-ghost:hover,
+.terms-modal-overlay .button.is-ghost:focus {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.terms-modal-overlay .button.is-primary {
+  background-color: #750550;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(117, 5, 80, 0.25);
+}
+
+.terms-modal-overlay .button.is-primary:hover,
+.terms-modal-overlay .button.is-primary:focus {
+  background-color: #4a0433;
+}
+
+.terms-modal-overlay .button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.terms-modal-overlay .icon-button {
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.15s ease;
+  color: #6b7280;
+}
+
+.terms-modal-overlay .icon-button:hover,
+.terms-modal-overlay .icon-button:focus {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.terms-modal-overlay .icon-button svg {
+  width: 20px;
+  height: 20px;
+}
