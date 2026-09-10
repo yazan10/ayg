@@ -1954,7 +1954,45 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                             <Ban className="w-3.5 h-3.5" />حظر (باند)
                           </button>
                         )}
-                        <button onClick={() => { if(confirm('حذف المستخدم نهائياً؟')) { const idx = users.findIndex(u=>u.id===user.id); if(idx!==-1) { const newUsers = users.filter(u=>u.id!==user.id); localStorage.setItem('aygram_users_v2', JSON.stringify(newUsers)); location.reload(); } } }} className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                        <button onClick={async () => {
+                          if(!confirm('حذف المستخدم نهائياً من كل قواعد البيانات؟ سيُحذف من Firestore و RTDB و localStorage بشكل نهائي ولا يمكن استعادته.')) return;
+                          try {
+                            // Delete from Firestore
+                            const { db } = await import('../lib/firebase');
+                            if (db) {
+                              const { doc, deleteDoc } = await import('firebase/firestore');
+                              await deleteDoc(doc(db, 'users', user.id)).catch(()=>{});
+                              await deleteDoc(doc(db, 'aygram', `user_${user.id}`)).catch(()=>{});
+                            }
+                            // Delete from RTDB
+                            const { rtdb } = await import('../lib/firebase');
+                            if (rtdb) {
+                              const { ref, remove } = await import('firebase/database');
+                              await remove(ref(rtdb, `users/${user.id}`)).catch(()=>{});
+                            }
+                            // Delete from Auth localStorage
+                            const authRaw = localStorage.getItem('aygram_auth_users_v1');
+                            if (authRaw) {
+                              const arr = JSON.parse(authRaw);
+                              const filtered = arr.filter((x:any) => x.id !== user.id && x.username !== user.username);
+                              localStorage.setItem('aygram_auth_users_v1', JSON.stringify(filtered));
+                            }
+                            // Delete from Store users
+                            const newUsers = users.filter(u=>u.id!==user.id);
+                            localStorage.setItem('aygram_users_v2', JSON.stringify(newUsers));
+                            // Also remove user's stores/products
+                            const storesRaw = localStorage.getItem('aygram_stores_v2');
+                            if (storesRaw) {
+                              const sArr = JSON.parse(storesRaw);
+                              const filteredStores = sArr.filter((s:any) => s.ownerId !== user.id && s.id !== user.id);
+                              localStorage.setItem('aygram_stores_v2', JSON.stringify(filteredStores));
+                            }
+                            alert('تم حذف الحساب نهائياً من كل قواعد البيانات');
+                            location.reload();
+                          } catch (e) {
+                            alert('حدث خطأ أثناء الحذف');
+                          }
+                        }} className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="حذف نهائي من كل قواعد البيانات">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

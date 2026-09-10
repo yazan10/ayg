@@ -83,6 +83,9 @@ export const ProfileMenuPage: React.FC = () => {
 
         <div className="space-y-1 pt-2">
           <span className="text-[11px] font-bold text-neutral-400 px-3 uppercase tracking-wider">{lang === 'ar' ? 'النظام والأمان' : 'System & Security'}</span>
+          <button onClick={() => navigate('/my-accounts')} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-blue-50 border border-blue-100 hover:border-blue-200 text-start">
+            <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><User className="w-5 h-5" /></div><div><span className="text-sm font-bold block text-blue-900">{lang === 'ar' ? 'قائمة حسابي' : 'My Accounts'}</span><span className="text-xs text-blue-600">{lang === 'ar' ? 'متاجري وحساباتي' : 'My stores & accounts'}</span></div></div><ChevronIcon className="w-4 h-4 text-blue-400" />
+          </button>
           <button onClick={() => navigate('/settings/account')} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-red-50 border border-red-100 hover:border-red-200 text-start">
             <div className="flex items-center gap-3"><div className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><Settings className="w-5 h-5" /></div><div><span className="text-sm font-bold block text-red-900">{lang === 'ar' ? 'إعدادات الحساب' : 'Account Settings'}</span><span className="text-xs text-red-600">{lang === 'ar' ? 'تعطيل أو حذف حسابك نهائياً' : 'Deactivate or delete account'}</span></div></div><ChevronIcon className="w-4 h-4 text-red-400" />
           </button>

@@ -147,10 +147,40 @@ h2 {
   font-size: clamp(1.25rem, 3vw, 1.875rem);
 }
 
-/* Responsive Images */
+/* Responsive Images - Fixed */
 img {
   max-width: 100%;
   height: auto;
+  object-fit: cover;
+  object-position: center;
+  background-color: #f1f5f9;
+  font-size: 0;
+}
+
+img[src=""],
+img:not([src]) {
+  display: none;
+}
+
+img.broken {
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* Image loading skeleton */
+img.loading {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Touch Target - Minimum 44px for mobile */

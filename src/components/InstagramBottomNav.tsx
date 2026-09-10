@@ -1,12 +1,16 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { useAuth } from '../context/AuthContext';
 import './ui/MobileMenu.css';
 
 export const InstagramBottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, lang, adminSettings } = useStore() as any;
+  const { lang, adminSettings } = useStore() as any;
+  const { isAuthenticated, currentUser: authUser } = useAuth();
+  const { currentUser: storeUser } = useStore() as any;
+  const displayUser = storeUser || authUser;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -99,14 +103,20 @@ export const InstagramBottomNav: React.FC = () => {
         )}
 
         <button
-          onClick={() => navigate('/profile')}
-          className={isActive('/profile') ? 'active' : ''}
+          onClick={() => navigate(isAuthenticated ? '/profile' : '/login')}
+          className={isActive('/profile') || isActive('/login') ? 'active' : ''}
           aria-label={lang === 'ar' ? 'حسابي' : 'Profile'}
         >
-          <div className="profile-avatar">
-            <img src={currentUser.avatar} alt="Profile" />
-          </div>
-          <span>{lang === 'ar' ? 'حسابي' : 'Profile'}</span>
+          {isAuthenticated && displayUser ? (
+            <div className="profile-avatar">
+              <img src={displayUser.avatar} alt="Profile" />
+            </div>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          )}
+          <span>{isAuthenticated ? (lang === 'ar' ? 'حسابي' : 'Profile') : (lang === 'ar' ? 'دخول' : 'Login')}</span>
         </button>
       </div>
     </div>

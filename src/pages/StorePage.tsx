@@ -4,6 +4,7 @@ import { useStore } from '../context/StoreContext';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Grid, ShoppingBag, Share2, Check, Phone, Globe, Crown, Clock, AlertCircle, Zap } from 'lucide-react';
 import { StarDisplay, StarRating } from '../components/ui/StarRating';
+import { VerificationBadge } from '../components/ui/VerificationBadge';
 
 export const StorePage: React.FC = () => {
   const { storeId } = useParams<{ storeId: string }>();
@@ -117,8 +118,8 @@ export const StorePage: React.FC = () => {
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 font-bold border border-blue-200">
               {lang === 'ar' ? store.category : store.categoryEn}
             </span>
-            {store.verified && isActive && <span className="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold">✓</span>}
-            {store.verified && !isActive && <span className="w-4 h-4 rounded-full bg-neutral-400 text-white flex items-center justify-center text-[10px] font-bold">✓</span>}
+            {store.verified && isActive && <VerificationBadge verified={store.verified} size="sm" />}
+            {store.verified && !isActive && <span className="opacity-50"><VerificationBadge verified={store.verified} size="sm" /></span>}
           </h3>
           <p className="text-xs text-neutral-700 leading-relaxed">{lang === 'ar' ? store.bio : store.bioEn}</p>
           <div className="flex items-center gap-3 text-[11px] text-neutral-500 pt-1 flex-wrap">

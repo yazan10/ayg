@@ -22,6 +22,7 @@ import {
   ShoppingBag,
   Heart,
 } from 'lucide-react';
+import { VerificationBadge } from '../components/ui/VerificationBadge';
 import { ReportReason } from '../types';
 
 export const UserProfile: React.FC = () => {
@@ -196,10 +197,12 @@ export const UserProfile: React.FC = () => {
 
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h2 className="font-black text-base">{user.name}</h2>
+              <h2 className="font-black text-base flex items-center gap-1.5">
+                <span>{user.name}</span>
+                {isGold ? <VerificationBadge tier="gold" size="sm" /> : isBlue ? <VerificationBadge tier="blue" size="sm" /> : user.verified ? <VerificationBadge verified={true} size="sm" /> : null}
+              </h2>
               {isGold && <span className="text-[11px] bg-gradient-to-r from-amber-400 to-yellow-500 text-white px-2 py-0.5 rounded-full font-black flex items-center gap-1"><Crown className="w-3 h-3" />ذهبية</span>}
               {isBlue && !isGold && <span className="text-[11px] bg-sky-500 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><BadgeCheck className="w-3 h-3" />موثق</span>}
-              {user.verified && !isGold && !isBlue && <ShieldCheck className="w-4 h-4 text-blue-500" />}
               <span className="text-xs text-neutral-500 font-mono">@{user.username}</span>
             </div>
             <p className="text-sm text-neutral-700 leading-relaxed whitespace-pre-line">{user.bio}</p>

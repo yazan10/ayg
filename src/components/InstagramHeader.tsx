@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { useAuth } from '../context/AuthContext';
 import { CURRENCIES } from '../types';
 import { CurrencySelectorModal } from './CurrencySelectorModal';
 import { 
@@ -33,10 +34,12 @@ export const InstagramHeader: React.FC = () => {
     unreadNotificationsCount,
     currency,
     liveStreams,
-    currentUser,
     adminSettings,
-    t 
+    t,
+    currentUser: storeCurrentUser
   } = useStore();
+  const { isAuthenticated, currentUser: authUser } = useAuth();
+  const currentUser = storeCurrentUser || authUser;
 
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
 
@@ -161,13 +164,19 @@ export const InstagramHeader: React.FC = () => {
             <span>{lang === 'ar' ? 'إنشاء' : 'Create'}</span>
           </button>
           <button
-            onClick={() => navigate('/profile')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black transition-all border shrink-0 ${isActive('/profile') ? 'bg-neutral-900 text-white border-neutral-900 shadow-md' : 'bg-white text-black border-neutral-200 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 shadow-sm'}`}
+            onClick={() => navigate(isAuthenticated ? '/profile' : '/login')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black transition-all border shrink-0 ${isActive('/profile') && isAuthenticated ? 'bg-neutral-900 text-white border-neutral-900 shadow-md' : isAuthenticated ? 'bg-white text-black border-neutral-200 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 shadow-sm' : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-sm'}`}
           >
-            <div className={`w-7 h-7 rounded-full overflow-hidden border-2 ${isActive('/profile') ? 'border-white/30' : 'border-neutral-200'}`}>
-              <img src={currentUser.avatar} alt="حسابي" className="w-full h-full object-cover" />
-            </div>
-            <span className="hidden xl:inline">{lang === 'ar' ? 'حسابي' : 'My Account'}</span>
+            {isAuthenticated && currentUser ? (
+              <>
+                <div className={`w-7 h-7 rounded-full overflow-hidden border-2 ${isActive('/profile') ? 'border-white/30' : 'border-neutral-200'}`}>
+                  <img src={currentUser.avatar} alt="حسابي" className="w-full h-full object-cover" />
+                </div>
+                <span className="hidden xl:inline">{lang === 'ar' ? 'حسابي' : 'My Account'}</span>
+              </>
+            ) : (
+              <span>{lang === 'ar' ? 'دخول' : 'Login'}</span>
+            )}
           </button>
         </nav>
 

@@ -29,6 +29,7 @@ import { AccountsPage } from './pages/AccountsPage';
 import { AccountSettingsPage } from './pages/AccountSettingsPage';
 import { BlockedUsersPage } from './pages/BlockedUsersPage';
 import { UserProfile } from './pages/UserProfile';
+import { MyAccountsPage } from './pages/MyAccountsPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ExploreView } from './components/ExploreView';
@@ -124,6 +125,7 @@ function AppRoutes() {
           <Route path="profile/menu" element={<ProfileMenuPage />} />
           <Route path="settings/account" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
           <Route path="blocked" element={<ProtectedRoute><BlockedUsersPage /></ProtectedRoute>} />
+          <Route path="my-accounts" element={<ProtectedRoute><MyAccountsPage /></ProtectedRoute>} />
           <Route path="user/:username" element={<UserProfile />} />
           <Route path="profile/:username" element={<UserProfile />} />
           <Route path="store/:storeId" element={<StorePage />} />

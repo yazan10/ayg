@@ -69,7 +69,7 @@ interface StoreContextType {
   isNotificationsOpen: boolean;
   setIsNotificationsOpen: (open: boolean) => void;
   users: UserAccount[];
-  currentUser: UserAccount;
+  currentUser: UserAccount | null;
   updateCurrentUser: (updated: Partial<UserAccount>) => void;
   comments: Comment[];
   likedProducts: string[];
@@ -372,24 +372,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const GUEST_USER: UserAccount = {
-    id: 'guest',
-    username: 'guest',
-    name: 'زائر',
-    nameEn: 'Guest',
-    avatar: 'https://ui-avatars.com/api/?name=Guest&background=d1d5db&color=6b7280&size=200&rounded=true&bold=true&format=svg',
-    bio: 'زائر في aygram — سجل دخولك للمتابعة',
-    bioEn: 'Guest on aygram — please login',
-    verified: false,
-    followersCount: 0,
-    followingCount: 0,
-    postsCount: 0,
-    isCurrentUser: false,
-    accountType: 'personal',
-  };
-
   const authSessionUser = getAuthSessionUser();
-  const currentUser = authSessionUser || users.find(u => u.isCurrentUser) || INITIAL_USERS[0] || GUEST_USER;
+  const currentUser = authSessionUser || users.find(u => u.isCurrentUser) || INITIAL_USERS[0] || null;
 
   // Force rerender when auth changes (same-tab)
   const [, setAuthTick] = useState(0);
