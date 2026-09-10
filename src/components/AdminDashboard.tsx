@@ -38,7 +38,7 @@ import {
   UserCheck,
   X
 } from 'lucide-react';
-import { FirebaseStatus } from './FirebaseStatus';
+
 import { Store, Product, Reel, UserAccount } from '../types';
 
 export const AdminDashboard: React.FC = () => {
@@ -635,9 +635,6 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                 </div>
               </div>
             </div>
-
-            {/* Firebase Status */}
-            <FirebaseStatus />
 
             {/* Reels Toggle - Video uploads */}
             <div className={`p-4 rounded-2xl border-2 flex items-center justify-between ${adminSettings.reelsEnabled ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
