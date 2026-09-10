@@ -74,10 +74,39 @@ export default defineConfig(() => {
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      watch: process.env.DISABLE_HMR === 'true' ? null : {
+        // The sandbox rewrites .env.development.local on every file sync, even
+        // when its contents are unchanged. Vite treats any change to this file
+        // as a reason to fully restart its dev server (to reload env vars). Our
+        // HMR websocket is bound to the shared Express HTTP server (see
+        // server.ts), so each such restart briefly attaches a second "upgrade"
+        // listener before the old one is removed, racing with real client
+        // connections and breaking the HMR websocket. Ignoring this file avoids
+        // those unnecessary restarts.
+        ignored: ['**/.env.development.local'],
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          // Split large vendor libraries out of the single main chunk so the
+          // browser can cache them separately and the initial JS payload shrinks.
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-firebase': [
+              'firebase/app',
+              'firebase/auth',
+              'firebase/firestore',
+              'firebase/storage',
+              'firebase/database',
+              'firebase/analytics',
+            ],
+          },
+        },
+      },
     },
   };
 });

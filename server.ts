@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { createServer as createHttpServer } from 'http';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 
@@ -406,18 +407,32 @@ app.post('/api/admin/verify', (req: Request, res: Response) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
+    // Share a single HTTP server between Express and Vite so that HMR's
+    // WebSocket is served from the same origin/port as the app. This is
+    // required behind the HTTPS preview proxy, where a separate Vite HMR
+    // WebSocket port is not reachable and the client would fail to connect.
+    const httpServer = createHttpServer(app);
+
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: { server: httpServer },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req: Request, res: Response) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      console.log(`aygram API & Dev Server active at http://0.0.0.0:${PORT}`);
     });
+    return;
   }
+
+  const distPath = path.join(process.cwd(), 'dist');
+  app.use(express.static(distPath));
+  app.get('*', (req: Request, res: Response) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`aygram API & Dev Server active at http://0.0.0.0:${PORT}`);

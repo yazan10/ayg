@@ -55,7 +55,7 @@
   align-items: center;
   flex: 1 1 0;
   min-width: 0;
-  color: rgba(255, 255, 255, 90%);
+  color: #000;
   text-decoration: none;
   padding: 8px 4px;
   border-radius: 999rem;
@@ -73,13 +73,13 @@
 
 .mobile-menu-wrapper .menu a:hover,
 .mobile-menu-wrapper .menu button:hover {
-  background-color: rgba(255, 255, 255, 30%);
+  background-color: rgba(255, 255, 255, 55%);
   box-shadow:
     inset 2px 2px 5px -2px rgba(255, 255, 255, 0.4),
     inset -2px -1px 5px 0 rgba(255, 255, 255, 0.4),
     inset 0 -2px 0 rgba(255, 255, 255, 0.2);
   transform: rotate(1.5deg) scale(1.02);
-  color: rgba(255, 255, 255, 100%);
+  color: #000;
 }
 
 .mobile-menu-wrapper .menu a svg,
