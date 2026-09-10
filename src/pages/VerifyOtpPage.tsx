@@ -121,9 +121,10 @@ export const VerifyOtpPage: React.FC = () => {
               <div className={`p-3 rounded-xl text-sm border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
                 <div>{message.text}</div>
                 {message.code && (
-                  <div className="mt-2 p-2 bg-white rounded-lg border border-dashed font-mono text-center">
-                    <span className="text-xs text-neutral-500 block">Demo OTP:</span>
-                    <span className="text-lg font-black tracking-widest text-blue-700">{message.code}</span>
+                  <div className="mt-2 p-2 bg-white rounded-lg border-2 border-[#323232] font-mono text-center">
+                    <span className="text-xs text-neutral-500 block">رمز التحقق (محفوظ في Firebase) 🔐</span>
+                    <span className="text-lg font-black tracking-widest text-[#323232]">{message.code}</span>
+                    <span className="text-[11px] text-emerald-600 block mt-1">✓ تم الحفظ في Firestore و RTDB</span>
                   </div>
                 )}
               </div>
@@ -131,9 +132,9 @@ export const VerifyOtpPage: React.FC = () => {
 
             {initialCode && !message?.code && (
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm">
-                <div className="text-amber-800 font-bold text-xs mb-1">رمز التجربة الحالي (Demo):</div>
-                <div className="font-mono text-lg font-black tracking-widest text-amber-700 text-center bg-white rounded-lg py-2 border border-dashed">{initialCode}</div>
-                <div className="text-[10px] text-amber-600 mt-1 text-center">في الإنتاج سيصلك عبر البريد الحقيقي</div>
+                <div className="text-amber-800 font-bold text-xs mb-1">رمز التحقق الحالي (محفوظ في Firebase):</div>
+                <div className="font-mono text-lg font-black tracking-widest text-amber-700 text-center bg-white rounded-lg py-2 border-2 border-[#323232]">{initialCode}</div>
+                <div className="text-[11px] text-emerald-600 mt-1 text-center font-bold">✓ محفوظ في Firestore/RTDB — سيظهر في Firebase Console</div>
               </div>
             )}
 

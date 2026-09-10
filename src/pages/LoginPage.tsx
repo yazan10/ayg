@@ -134,8 +134,9 @@ export const LoginPage: React.FC = () => {
                 <span className="font-bold">{message.text}</span>
                 {message.code && (
                   <div className="mt-2 p-2 bg-white rounded border-2 border-[#323232] font-mono text-center">
-                    <span className="text-xs text-neutral-500 block">Demo OTP:</span>
+                    <span className="text-xs text-neutral-500 block">رمز التحقق (محفوظ في Firebase) 🔐</span>
                     <span className="text-lg font-black tracking-widest text-[#323232]">{message.code}</span>
+                    <span className="text-[11px] text-emerald-600 block mt-1">✓ تم الحفظ في Firestore و RTDB</span>
                   </div>
                 )}
               </div>

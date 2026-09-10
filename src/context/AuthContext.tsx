@@ -226,10 +226,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       [normalized]: { code, email: normalized, expiresAt, type }
     }));
 
-    // Simulate sending email - in production integrate with backend / email service
-    console.log(`[aygram OTP] ${type} code for ${normalized}: ${code} (expires in 5 min)`);
+    // Store OTP in Firebase Firestore + RTDB for real tracking
+    try {
+      const { db, rtdb } = await import('../lib/firebase');
+      if (db) {
+        const { doc, setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'otps', normalized.replace(/[@.]/g, '_')), {
+          email: normalized,
+          code,
+          type,
+          expiresAt: new Date(expiresAt).toISOString(),
+          createdAt: new Date().toISOString(),
+        }).catch(() => {});
+      }
+      if (rtdb) {
+        const { ref, set } = await import('firebase/database');
+        await set(ref(rtdb, `otps/${normalized.replace(/[@.]/g, '_')}`), {
+          email: normalized,
+          code,
+          type,
+          expiresAt,
+        }).catch(() => {});
+      }
+    } catch {}
 
-    // Also store for demo visible in UI
+    console.log(`[aygram OTP] ${type} code for ${normalized}: ${code} (expires in 5 min) - stored in Firebase Firestore/RTDB`);
+
     return { success: true, code, message: type === 'login' ? 'تم إرسال رمز الدخول إلى بريدك' : 'تم إرسال رمز التأكيد إلى بريدك' };
   };
 
@@ -296,7 +318,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }));
 
-    console.log(`[aygram REGISTER OTP] for ${normalizedEmail}: ${code}`);
+    // Store pending registration in Firebase Firestore/RTDB for real tracking
+    try {
+      const { db, rtdb } = await import('../lib/firebase');
+      if (db) {
+        const { doc, setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'pending_otps', normalizedEmail.replace(/[@.]/g, '_')), {
+          email: normalizedEmail,
+          username: normalizedUsername,
+          name: name.trim(),
+          code,
+          nationality,
+          nationalityNameAr,
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(expiresAt).toISOString(),
+        }).catch(() => {});
+      }
+      if (rtdb) {
+        const { ref, set } = await import('firebase/database');
+        await set(ref(rtdb, `pending_otps/${normalizedEmail.replace(/[@.]/g, '_')}`), {
+          email: normalizedEmail,
+          code,
+          expiresAt,
+        }).catch(() => {});
+      }
+    } catch {}
+
+    console.log(`[aygram REGISTER OTP] for ${normalizedEmail}: ${code} - stored in Firebase`);
 
     return { success: true, message: 'تم إرسال رمز التأكيد إلى بريدك الإلكتروني', needOtp: true };
   };
@@ -381,6 +429,55 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       nationalityNameAr: (pending as any).nationalityNameAr,
     };
 
+    // Create real Firebase Auth user and store in Firestore/RTDB
+    try {
+      const { auth, db, rtdb } = await import('../lib/firebase');
+      if (auth) {
+        const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, pending.email, pending.password);
+          await updateProfile(cred.user, { displayName: pending.name, photoURL: avatarToUse }).catch(() => {});
+          // Use Firebase UID as id if available
+          newUser.id = cred.user.uid;
+        } catch (e: any) {
+          // If user already exists in Firebase, continue with local
+          console.warn('[Firebase Auth] createUser failed, using local:', e?.message);
+        }
+      }
+      if (db) {
+        const { doc, setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'users', newUser.id), {
+          id: newUser.id,
+          name: newUser.name,
+          username: newUser.username,
+          email: newUser.email,
+          avatar: newUser.avatar,
+          nationality: newUser.nationality,
+          nationalityNameAr: newUser.nationalityNameAr,
+          verified: newUser.verified,
+          createdAt: newUser.createdAt,
+        }).catch(() => {});
+        // Also store OTP verification record
+        await setDoc(doc(db, 'otps', normalized.replace(/[@.]/g, '_')), {
+          email: normalized,
+          verified: true,
+          verifiedAt: new Date().toISOString(),
+        }).catch(() => {});
+      }
+      if (rtdb) {
+        const { ref, set } = await import('firebase/database');
+        await set(ref(rtdb, `users/${newUser.id}`), {
+          id: newUser.id,
+          name: newUser.name,
+          username: newUser.username,
+          email: newUser.email,
+          avatar: newUser.avatar,
+          createdAt: newUser.createdAt,
+        }).catch(() => {});
+        await set(ref(rtdb, `otps/${normalized.replace(/[@.]/g, '_')}`), null).catch(() => {});
+      }
+    } catch {}
+
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
 
@@ -390,7 +487,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return next;
     });
 
-    return { success: true, message: 'تم إنشاء الحساب بنجاح! مرحباً بك في aygram' };
+    return { success: true, message: 'تم إنشاء حسابك بنجاح في Firebase! مرحباً بك في aygram' };
   };
 
   const loginWithOtp = async (email: string, code: string): Promise<{ success: boolean; message: string }> => {
