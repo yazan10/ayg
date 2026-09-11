@@ -21,14 +21,8 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // OTP / pending registration records - written by the app during signup/login,
-    // never read back by clients (verification happens against local state).
-    match /otps/{otpId} {
-      allow read, write: if true;
-    }
-    match /pending_otps/{otpId} {
-      allow read, write: if true;
-    }
+    // OTP / pending registration records - strict rules below
+    // (validated creates, public read for static hosts, attempts-only updates).
 
     // Users - each user can read all, write only own
     match /users/{userId} {
@@ -74,6 +68,54 @@ service cloud.firestore {
     // Blocks
     match /blocks/{blockId} {
       allow read, write: if isSignedIn() && request.resource.data.blockedBy == request.auth.uid;
+    }
+
+    // Verification codes (numeric, Firebase-backed).
+    // - create: shape-validated, expiry <= 10 min, attempts must start at 0
+    // - read: open (needed for static hosts); abuse bounded by short expiry
+    //   + server-enforced attempt burn below (max 5 wrong tries per code)
+    // - update: ONLY attempts incremented by exactly 1, max 5, nothing else changes
+    // - delete: server only (Admin SDK bypasses rules)
+    match /otps/{otpId} {
+      allow create: if request.resource.data.keys().hasAll(['email', 'code', 'deviceFp', 'attempts', 'expiresAtMs', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.code is string
+        && request.resource.data.code.size() == 6
+        && request.resource.data.deviceFp is string
+        && request.resource.data.attempts == 0
+        && request.resource.data.expiresAtMs is int
+        && request.resource.data.expiresAtMs > request.time.toMillis()
+        && request.resource.data.expiresAtMs <= request.time.toMillis() + 600000;
+      allow read: if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attempts'])
+        && request.resource.data.attempts == resource.data.attempts + 1
+        && request.resource.data.attempts <= 5;
+      allow delete: if false;
+    }
+
+    // Registration codes live here (same protections as otps)
+    match /pending_otps/{otpId} {
+      allow create: if request.resource.data.keys().hasAll(['email', 'code', 'deviceFp', 'attempts', 'expiresAtMs', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.code is string
+        && request.resource.data.code.size() == 6
+        && request.resource.data.deviceFp is string
+        && request.resource.data.attempts == 0
+        && request.resource.data.expiresAtMs is int
+        && request.resource.data.expiresAtMs > request.time.toMillis()
+        && request.resource.data.expiresAtMs <= request.time.toMillis() + 600000;
+      allow read: if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attempts'])
+        && request.resource.data.attempts == resource.data.attempts + 1
+        && request.resource.data.attempts <= 5;
+      allow delete: if false;
+    }
+
+    // Audit log for code requests (abuse tracking) - clients can only append
+    match /otp_audit/{auditId} {
+      allow create: if request.resource.data.keys().hasAll(['email', 'deviceFp', 'action', 'atMs'])
+        && request.resource.data.atMs is int;
+      allow read, update, delete: if false;
     }
 
     // Default deny

@@ -73,7 +73,7 @@ export const DirectMessagesView: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-xs h-[calc(100vh-8rem)] min-h-[600px] flex">
+    <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-xs h-[calc(100dvh-8rem)] min-h-[500px] md:min-h-[600px] flex touch-pan-y">
       {/* Conversations Sidebar (Always visible on desktop, conditionally on mobile) */}
       <div className={`w-full md:w-80 lg:w-96 border-e border-neutral-200 flex flex-col ${
         activeConversationId ? 'hidden md:flex' : 'flex'
@@ -125,7 +125,7 @@ export const DirectMessagesView: React.FC = () => {
         </div>
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-neutral-100 p-2">
+        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y divide-y divide-neutral-100 p-2">
           {isLoading ? (
             <ChatSkeleton count={5} />
           ) : filteredConversations.length === 0 ? (
@@ -278,7 +278,7 @@ export const DirectMessagesView: React.FC = () => {
             </div>
 
             {/* Messages Scroll Area */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col justify-end">
+            <div className="flex-1 p-4 overflow-y-auto overscroll-contain touch-pan-y space-y-3 flex flex-col justify-end">
               {currentConv.messages.map(msg => {
                 const isMe = msg.senderId === currentUser.id;
                 return (

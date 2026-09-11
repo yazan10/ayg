@@ -38,9 +38,9 @@ export const useAppPageLoader = (options: UseAppPageLoaderOptions = {}) => {
     }
   }, [isOnline, isSlowConnection, slowNetworkDelay]);
 
-  // 3. Login route loading - show loader briefly when navigating to /login, /register, /verify-otp
+  // 3. Login route loading - show loader briefly when navigating to auth routes
   useEffect(() => {
-    const isAuthRoute = ['/login', '/register', '/verify-otp'].some(route =>
+    const isAuthRoute = ['/login', '/register', '/finishSignIn'].some(route =>
       location.pathname.startsWith(route)
     );
 

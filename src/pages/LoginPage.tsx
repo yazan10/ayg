@@ -7,14 +7,13 @@ import '../components/ui/AuthFormCard.css';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { sendOtp, loginWithOtp, loginWithPassword, isAuthenticated } = useAuth();
-  const [mode, setMode] = useState<'otp' | 'password'>('otp');
+  const { sendLoginLink, loginWithPassword, isAuthenticated } = useAuth();
+  const [mode, setMode] = useState<'link' | 'password'>('password');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   React.useEffect(() => {
@@ -22,10 +21,10 @@ export const LoginPage: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   const handleOAuthClick = (provider: string) => {
-    setMessage({ type: 'info', text: `تسجيل الدخول عبر ${provider} قريباً — حالياً استخدم البريد ورمز OTP` });
+    setMessage({ type: 'info', text: `تسجيل الدخول عبر ${provider} قريباً — حالياً استخدم البريد` });
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       setMessage({ type: 'error', text: 'الرجاء إدخال البريد الإلكتروني' });
@@ -33,28 +32,11 @@ export const LoginPage: React.FC = () => {
     }
     setLoading(true);
     setMessage(null);
-    const res = await sendOtp(email, 'login');
+    const res = await sendLoginLink(email);
     setLoading(false);
     if (res.success) {
       setMessage({ type: 'success', text: res.message });
-      setStep('otp');
-    } else {
-      setMessage({ type: 'error', text: res.message });
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp.trim()) {
-      setMessage({ type: 'error', text: 'الرجاء إدخال رمز التحقق' });
-      return;
-    }
-    setLoading(true);
-    const res = await loginWithOtp(email, otp);
-    setLoading(false);
-    if (res.success) {
-      setMessage({ type: 'success', text: res.message });
-      setTimeout(() => navigate('/'), 600);
+      setLinkSent(true);
     } else {
       setMessage({ type: 'error', text: res.message });
     }
@@ -92,7 +74,7 @@ export const LoginPage: React.FC = () => {
           <p>منصة التواصل الاجتماعي والمتاجر المتكاملة</p>
         </div>
 
-        <form className="auth-form-card" onSubmit={mode === 'otp' ? (step === 'email' ? handleSendOtp : handleVerifyOtp) : handlePasswordLogin}>
+        <form className="auth-form-card" onSubmit={mode === 'link' ? handleSendLink : handlePasswordLogin}>
           <p>
             Welcome,<span>sign in to continue</span>
           </p>
@@ -123,8 +105,8 @@ export const LoginPage: React.FC = () => {
 
           {/* Mode Toggle */}
           <div className="flex bg-[#323232] p-1 rounded-lg w-full gap-1">
-            <button type="button" onClick={() => { setMode('otp'); setStep('email'); setMessage(null); }} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'otp' ? 'bg-white text-[#323232] shadow' : 'text-white/70'}`}>OTP</button>
             <button type="button" onClick={() => { setMode('password'); setMessage(null); }} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'password' ? 'bg-white text-[#323232] shadow' : 'text-white/70'}`}>Password</button>
+            <button type="button" onClick={() => { setMode('link'); setMessage(null); setLinkSent(false); }} className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'link' ? 'bg-white text-[#323232] shadow' : 'text-white/70'}`}>رابط الدخول</button>
           </div>
 
            {message && (
@@ -136,46 +118,26 @@ export const LoginPage: React.FC = () => {
              </div>
            )}
 
-          {mode === 'otp' ? (
-            step === 'email' ? (
-              <>
-                <div className="form-group">
-                  <label className="form-label">البريد الإلكتروني *</label>
-                  <input type="email" placeholder="Email" name="email" dir="ltr" required value={email} onChange={e => setEmail(e.target.value)} className="form-input" />
-                  <p className="text-[11px] text-[#666] mt-1">سنرسل لك رمز 6 أرقام صالح لـ 5 دقائق</p>
-                </div>
+           {mode === 'link' ? (
+             <>
+               <div className="form-group">
+                 <label className="form-label">البريد الإلكتروني *</label>
+                 <input type="email" placeholder="Email" name="email" dir="ltr" required value={email} onChange={e => setEmail(e.target.value)} className="form-input" />
+                 <p className="text-[11px] text-[#666] mt-1">سنرسل لك رابط دخول يفتح حسابك مباشرة</p>
+               </div>
 
-                <button type="submit" className="continue-btn">
-                  Continue
-                  <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
-                </button>
+               <button type="submit" className="continue-btn">
+                 إرسال رابط الدخول
+                 <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
+               </button>
 
-                <p className="text-xs text-center text-[#666]">
-                  yazan@aygram.com • sarah@aygram.com
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="w-full p-3 bg-white border-2 border-[#323232] rounded-lg shadow-[3px_3px_#323232] text-center">
-                  <p className="text-xs text-[#666]">تم الإرسال إلى</p>
-                  <p className="text-sm font-bold font-mono text-[#323232]" dir="ltr">{email}</p>
-                  <button type="button" onClick={() => setStep('email')} className="text-xs text-[#2d8cf0] font-bold hover:underline mt-1">تغيير البريد</button>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">رمز التحقق (OTP) *</label>
-                  <input type="text" inputMode="numeric" maxLength={6} autoFocus value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} placeholder="••••••" dir="ltr" className="form-input text-center text-xl tracking-[0.4em] font-black" />
-                </div>
-
-                <button type="submit" disabled={otp.length !== 6} className="continue-btn disabled:opacity-50">
-                  تأكيد الدخول
-                  <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
-                </button>
-
-                <button type="button" onClick={handleSendOtp} className="w-full text-sm font-bold text-[#323232] hover:underline">إعادة إرسال الرمز</button>
-              </>
-            )
-          ) : (
+               {linkSent && (
+                 <p className="text-xs text-center text-[#666]">
+                   افتح الرابط من بريدك على نفس الجهاز لإتمام الدخول
+                 </p>
+               )}
+             </>
+           ) : (
             <>
               <div className="form-group">
                 <label className="form-label">البريد أو اسم المستخدم *</label>
@@ -206,8 +168,6 @@ export const LoginPage: React.FC = () => {
                 دخول
                 <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5"></path><path d="m13 17 5-5-5-5"></path></svg>
               </button>
-
-              <p className="text-xs text-center text-[#666]">yazan@aygram.com / yaz@#5Y</p>
             </>
           )}
 

@@ -1,12 +1,159 @@
 import express, { Request, Response } from 'express';
 import { createServer as createHttpServer } from 'http';
 import path from 'path';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+import * as adminApp from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getDatabase } from 'firebase-admin/database';
 import { createServer as createViteServer } from 'vite';
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// ----------------------------------------------------
+// Firebase Admin SDK (server-side only - NEVER expose to client)
+// Credentials come from env: FIREBASE_SERVICE_ACCOUNT_JSON (raw or base64)
+// or FIREBASE_SERVICE_ACCOUNT_PATH (path to serviceAccountKey.json).
+// The legacy RTDB database secret (FIREBASE_DATABASE_SECRET) is NOT needed
+// when the Admin SDK is configured - keep it private in env if you store it.
+// ----------------------------------------------------
+let adminAuth: any = null;
+let adminDb: any = null;
+let adminReady = false;
+
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+async function initFirebaseAdmin() {
+  try {
+    let credential: any = null;
+    const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '';
+    const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '';
+    if (rawJson) {
+      try {
+        // Support base64-encoded JSON (safe for single-line env vars)
+        const maybeJson = /^[A-Za-z0-9+/=\s]+$/.test(rawJson) && !rawJson.trim().startsWith('{')
+          ? Buffer.from(rawJson, 'base64').toString('utf8')
+          : rawJson;
+        credential = adminApp.cert(JSON.parse(maybeJson));
+      } catch (e: any) {
+        console.warn('[admin] Invalid FIREBASE_SERVICE_ACCOUNT_JSON:', e?.message);
+      }
+    } else if (keyPath) {
+      try {
+        credential = adminApp.cert(keyPath);
+      } catch (e: any) {
+        console.warn('[admin] Cannot load FIREBASE_SERVICE_ACCOUNT_PATH:', e?.message);
+      }
+    }
+    if (!credential) {
+      console.warn('[admin] Admin SDK not configured - set FIREBASE_SERVICE_ACCOUNT_JSON. Admin sessions will use env-credential fallback.');
+      return;
+    }
+    const app = adminApp.getApps().length === 0
+      ? adminApp.initializeApp({
+          credential,
+          databaseURL: 'https://aygram-8d0d0-default-rtdb.firebaseio.com',
+        })
+      : adminApp.getApps()[0];
+    adminAuth = getAuth(app);
+    try {
+      adminDb = getDatabase(app);
+    } catch {}
+    adminReady = true;
+    console.log('[admin] Firebase Admin SDK ready');
+    await ensureAdminUser();
+  } catch (e: any) {
+    console.warn('[admin] firebase-admin unavailable:', e?.message);
+  }
+}
+
+// Create the admin Auth user (if missing) and grant the admin claim.
+// The admin MUST verify the email (Firebase sends the verification link)
+// before admin sessions are issued - that is the email-confirmation step.
+async function ensureAdminUser() {
+  try {
+    if (!adminReady || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+      if (ADMIN_EMAIL && !isValidEmail(ADMIN_EMAIL)) {
+        console.warn('[admin] ADMIN_EMAIL is not a valid email address - fix it in env (did you mean a full address with domain?). Skipping admin bootstrap.');
+      }
+      return;
+    }
+    let user: any = null;
+    try {
+      user = await adminAuth.getUserByEmail(ADMIN_EMAIL);
+    } catch (e: any) {
+      if (e?.code === 'auth/user-not-found') {
+        user = await adminAuth.createUser({
+          email: ADMIN_EMAIL,
+          password: ADMIN_PASSWORD,
+          displayName: 'aygram Admin',
+          emailVerified: false,
+        });
+        console.log('[admin] Admin Auth user created - a verification email must be confirmed before login');
+      } else {
+        throw e;
+      }
+    }
+    const claims = (user.customClaims || {}) as Record<string, unknown>;
+    if (claims.admin !== true) {
+      await adminAuth.setCustomUserClaims(user.uid, { ...claims, admin: true });
+      console.log('[admin] Admin claim granted');
+    }
+    if (adminDb) {
+      await adminDb.ref(`admins/${user.uid}`).update({
+        email: ADMIN_EMAIL,
+        role: 'superadmin',
+        updatedAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
+  } catch (e: any) {
+    console.warn('[admin] ensureAdminUser failed:', e?.message);
+  }
+}
+
+initFirebaseAdmin();
+
+// ----------------------------------------------------
+// Admin sessions + rate limiting (in-memory)
+// ----------------------------------------------------
+const adminSessions = new Map<string, { email: string; uid: string; mode: string; expiresAt: number }>();
+const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12h
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string, max = 10, windowMs = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const rec = loginAttempts.get(ip);
+  if (!rec || now > rec.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  rec.count += 1;
+  return rec.count <= max;
+}
+
+function issueAdminSession(email: string, uid: string, mode: string): string {
+  const token = `aygram_admin_${crypto.randomBytes(32).toString('hex')}`;
+  adminSessions.set(token, { email, uid, mode, expiresAt: Date.now() + ADMIN_SESSION_TTL_MS });
+  return token;
+}
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ba.length !== bb.length) return false;
+  try {
+    return crypto.timingSafeEqual(ba, bb);
+  } catch {
+    return false;
+  }
+}
 
 // In-memory data store seeded for backend REST API
 const apiData: any = {
@@ -292,6 +439,134 @@ app.get('/api/auth/users', (req: Request, res: Response) => {
   res.json({ success: true, users: authUsers.map(u => ({ id: u.id, name: u.name, username: u.username, email: u.email, avatar: u.avatar, verified: u.verified, createdAt: u.createdAt })), total: authUsers.length });
 });
 
+// 5b. Firebase-backed verification codes (authoritative path).
+// Codes are stored via Admin SDK (RTDB otpCodes + Firestore pending_otps)
+// and verified here, with hard per-IP and per-device limits so code
+// endpoints cannot be abused to drain resources.
+const codeDeviceLimits = new Map<string, { count: number; resetAt: number }>();
+const checkDeviceLimit = (key: string, max: number, windowMs: number): boolean => {
+  const now = Date.now();
+  const rec = codeDeviceLimits.get(key);
+  if (!rec || now > rec.resetAt) {
+    codeDeviceLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  rec.count += 1;
+  return rec.count <= max;
+};
+const CODE_TTL_MS = 5 * 60 * 1000;
+const emailDocKey = (email: string) => email.trim().toLowerCase().replace(/[@.]/g, '_');
+
+app.post('/api/auth/request-code', async (req: Request, res: Response) => {
+  const ip = (req.ip || req.socket?.remoteAddress || 'unknown').toString();
+  if (!checkRateLimit(ip, 10)) {
+    return res.status(429).json({ success: false, error: 'Too many requests - try later' });
+  }
+  const { email, username, name, deviceFp } = req.body || {};
+  const normalized = (email || '').trim().toLowerCase();
+  const fp = (deviceFp || '').toString().slice(0, 80);
+  if (!normalized || !normalized.includes('@')) return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
+  if (!/^[a-z0-9_.]+$/.test((username || '').toLowerCase().replace(/^@/, '')) || (username || '').length < 3) {
+    return res.status(400).json({ success: false, message: 'اسم المستخدم غير صالح' });
+  }
+  if (!fp) return res.status(400).json({ success: false, message: 'بصمة الجهاز مطلوبة' });
+  if (!checkDeviceLimit(`req:${fp}`, 5, 60 * 60 * 1000)) {
+    return res.status(429).json({ success: false, message: 'تجاوزت حد طلب الرموز لهذا الجهاز — حاول لاحقاً' });
+  }
+  if (!adminReady) {
+    return res.status(503).json({ success: false, message: 'Code service unavailable', useDirect: true });
+  }
+  try {
+    try {
+      await adminAuth.getUserByEmail(normalized);
+      return res.status(409).json({ success: false, message: 'البريد مسجل مسبقاً، سجل الدخول' });
+    } catch (e: any) {
+      if (e?.code !== 'auth/user-not-found') throw e;
+    }
+    const code = generateOtpCode();
+    const expiresAtMs = Date.now() + CODE_TTL_MS;
+    const key = emailDocKey(normalized);
+    const record = { email: normalized, code, deviceFp: fp, attempts: 0, expiresAtMs, createdAt: new Date().toISOString() };
+    if (adminDb) {
+      await adminDb.ref(`otpCodes/${key}`).set(record).catch(() => {});
+    }
+    try {
+      const { getFirestore } = await import('firebase-admin/firestore');
+      const db = getFirestore();
+      await db.doc(`pending_otps/${key}`).set(record, { merge: false }).catch(() => {});
+      await db.collection('otp_audit').add({ email: normalized, deviceFp: fp, action: 'request', atMs: Date.now() }).catch(() => {});
+    } catch {}
+    console.log(`[aygram CODE] register code stored for ${normalized} (device-bound, 5 min)`);
+    return res.json({ success: true, message: 'تم إرسال رمز التحقق — صالح لمدة 5 دقائق', code, expiresAtMs, email: normalized });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, message: 'تعذر إنشاء الرمز — حاول مجدداً' });
+  }
+});
+
+app.post('/api/auth/verify-code', async (req: Request, res: Response) => {
+  const ip = (req.ip || req.socket?.remoteAddress || 'unknown').toString();
+  if (!checkRateLimit(ip, 30)) {
+    return res.status(429).json({ success: false, error: 'Too many attempts - try later' });
+  }
+  const { email, code, deviceFp } = req.body || {};
+  const normalized = (email || '').trim().toLowerCase();
+  const typed = (code || '').trim();
+  const fp = (deviceFp || '').toString().slice(0, 80);
+  if (!/^\d{6}$/.test(typed)) return res.status(400).json({ success: false, message: 'الرمز يجب أن يكون 6 أرقام' });
+  if (!adminReady) {
+    return res.status(503).json({ success: false, message: 'Code service unavailable', useDirect: true });
+  }
+  try {
+    const key = emailDocKey(normalized);
+    let record: any = null;
+    if (adminDb) {
+      const snap = await adminDb.ref(`otpCodes/${key}`).get().catch(() => null);
+      if (snap && snap.exists()) record = snap.val();
+    }
+    if (!record) {
+      try {
+        const { getFirestore } = await import('firebase-admin/firestore');
+        const snap = await getFirestore().doc(`pending_otps/${key}`).get().catch(() => null);
+        if (snap && snap.exists) record = snap.data();
+      } catch {}
+    }
+    if (!record) return res.status(404).json({ success: false, message: 'الرمز غير موجود أو انتهى — اطلب رمزاً جديداً' });
+    if (Date.now() > record.expiresAtMs) {
+      try { if (adminDb) await adminDb.ref(`otpCodes/${key}`).remove().catch(() => {}); } catch {}
+      return res.status(410).json({ success: false, message: 'انتهت صلاحية الرمز — اطلب رمزاً جديداً' });
+    }
+    if (record.deviceFp && record.deviceFp !== fp) {
+      return res.status(403).json({ success: false, message: 'هذا الرمز مرتبط بالجهاز الذي طُلب منه' });
+    }
+    if ((record.attempts || 0) >= 5) {
+      return res.status(403).json({ success: false, message: 'انتهت محاولات هذا الرمز — اطلب رمزاً جديداً' });
+    }
+    if (record.code !== typed) {
+      const attempts = (record.attempts || 0) + 1;
+      try {
+        if (adminDb) await adminDb.ref(`otpCodes/${key}/attempts`).set(attempts).catch(() => {});
+        const { getFirestore } = await import('firebase-admin/firestore');
+        await getFirestore().doc(`pending_otps/${key}`).update({ attempts }).catch(() => {});
+      } catch {}
+      const left = 5 - attempts;
+      return res.status(403).json({
+        success: false,
+        message: left > 0 ? `الرمز غير صحيح — بقيت ${left} محاولات` : 'الرمز غير صحيح — انتهت المحاولات، اطلب رمزاً جديداً',
+        remaining: Math.max(0, left),
+      });
+    }
+    // Match: burn the code so it cannot be reused
+    try {
+      if (adminDb) await adminDb.ref(`otpCodes/${key}`).remove().catch(() => {});
+      const { getFirestore } = await import('firebase-admin/firestore');
+      await getFirestore().doc(`pending_otps/${key}`).delete().catch(() => {});
+    } catch {}
+    return res.json({ success: true, message: 'تم تأكيد الرمز بنجاح' });
+  } catch {
+    return res.status(500).json({ success: false, message: 'تعذر التحقق — حاول مجدداً' });
+  }
+});
+
 // 6. Subscriptions & Pricing - فصل المتاجر عن الحسابات
 app.get('/api/pricing', (req: Request, res: Response) => {
   res.json({
@@ -377,28 +652,67 @@ app.post('/api/accounts/:id/cancel-verification', (req: Request, res: Response) 
   res.json({ success: true, message: 'تم إلغاء التوثيق', user });
 });
 
-// 7. Admin & Security Verification
-app.post('/api/admin/verify', (req: Request, res: Response) => {
-  const { username, password } = req.body;
-  // Match admin password to username or master keys
-  if (
-    password === username ||
-    password === 'ayzan_official' ||
-    password === 'yaz@#5Y' ||
-    password === 'admin'
-  ) {
-    return res.json({
-      success: true,
-      authorized: true,
-      role: 'superadmin',
-      token: `aygram_admin_token_${Date.now()}`
-    });
+// 7. Admin & Security Verification (Firebase Admin SDK backed)
+//
+// Primary flow (works with Admin SDK configured):
+//   client signs in with Firebase Auth -> POST { idToken } ->
+//   server verifies token + admin claim + verified email -> session token.
+// Fallback flow (Admin SDK key not set on this host):
+//   POST { email, password } checked against ADMIN_EMAIL/ADMIN_PASSWORD env.
+// Legacy weak passwords were removed - they no longer grant access.
+app.post('/api/admin/verify', async (req: Request, res: Response) => {
+  const ip = (req.ip || req.socket?.remoteAddress || 'unknown').toString();
+  if (!checkRateLimit(ip, 10)) {
+    return res.status(429).json({ success: false, authorized: false, error: 'Too many attempts - try later' });
   }
-  return res.status(401).json({
-    success: false,
-    authorized: false,
-    error: 'Invalid admin credentials'
-  });
+
+  const { idToken, email, password } = req.body || {};
+
+  // Mode A: verify Firebase ID token (preferred)
+  if (idToken && adminReady) {
+    try {
+      const decoded: any = await adminAuth.verifyIdToken(idToken, true);
+      const claimsOk = decoded?.admin === true;
+      const mailOk = decoded?.email_verified === true;
+      const mail = (decoded?.email || '').toLowerCase();
+      if (!claimsOk) {
+        return res.status(403).json({ success: false, authorized: false, error: 'Account is not an admin' });
+      }
+      if (!mailOk) {
+        return res.status(403).json({ success: false, authorized: false, error: 'Email not verified - confirm the verification email first', needEmailVerification: true });
+      }
+      const token = issueAdminSession(mail, decoded.uid, 'sdk');
+      return res.json({ success: true, authorized: true, role: 'superadmin', email: mail, mode: 'sdk', token });
+    } catch (e: any) {
+      return res.status(401).json({ success: false, authorized: false, error: 'Invalid session - sign in again' });
+    }
+  }
+
+  // Mode B: env-credential fallback (only when Admin SDK is not configured here)
+  if (!adminReady) {
+    const e = (email || '').trim().toLowerCase();
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !isValidEmail(ADMIN_EMAIL)) {
+      return res.status(503).json({ success: false, authorized: false, error: 'Admin login not configured on this server' });
+    }
+    if (e && timingSafeEqualStr(e, ADMIN_EMAIL) && typeof password === 'string' && timingSafeEqualStr(password, ADMIN_PASSWORD)) {
+      const token = issueAdminSession(ADMIN_EMAIL, 'env-admin', 'env');
+      return res.json({ success: true, authorized: true, role: 'superadmin', email: ADMIN_EMAIL, mode: 'env', token });
+    }
+    return res.status(401).json({ success: false, authorized: false, error: 'Invalid admin credentials' });
+  }
+
+  return res.status(400).json({ success: false, authorized: false, error: 'Sign in with the admin email first' });
+});
+
+app.get('/api/admin/me', (req: Request, res: Response) => {
+  const header = (req.headers.authorization || '').toString();
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  const sess = token ? adminSessions.get(token) : undefined;
+  if (!sess || Date.now() > sess.expiresAt) {
+    if (token) adminSessions.delete(token);
+    return res.status(401).json({ success: false, isAdmin: false });
+  }
+  return res.json({ success: true, isAdmin: true, email: sess.email, mode: sess.mode });
 });
 
 // ----------------------------------------------------

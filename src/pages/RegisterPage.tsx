@@ -11,7 +11,7 @@ import '../components/ui/AuthFormCard.css';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { register, isAuthenticated, checkUsername, reserveUsername } = useAuth();
+  const { requestRegisterCode, isAuthenticated, checkUsername, reserveUsername } = useAuth();
 
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -141,7 +141,7 @@ export const RegisterPage: React.FC = () => {
     if (!pendingData) return;
     setShowTermsModal(false);
     setLoading(true);
-    const res = await register({
+    const res = await requestRegisterCode({
       name: pendingData.name,
       username: pendingData.username,
       email: pendingData.email,
@@ -153,10 +153,14 @@ export const RegisterPage: React.FC = () => {
     });
     setLoading(false);
 
-    if (res.success && res.needOtp) {
-      navigate(`/verify-otp?email=${encodeURIComponent(pendingData.email.trim().toLowerCase())}&type=register`);
+    if (res.success) {
+      navigate(`/verify-otp?email=${encodeURIComponent(pendingData.email.trim().toLowerCase())}&type=register`, { state: { code: res.code } });
     } else if (!res.success) {
-      setMessage({ type: 'error', text: res.message });
+      if (res.cooldownSec) {
+        setMessage({ type: 'error', text: `${res.message}` });
+      } else {
+        setMessage({ type: 'error', text: res.message });
+      }
     }
   };
 
@@ -231,7 +235,7 @@ export const RegisterPage: React.FC = () => {
               <span className="font-bold text-red-700">ذات الأرواح</span>
               <span className="text-amber-700"> أو </span>
               <span className="font-bold text-red-700">الشخصيات المقتبسة</span>
-              <span className="text-amber-700"> — الصور تُضغط وتُحفظ في Vercel كرابط.</span>
+              <span className="text-amber-700"> — الصور تُضغط تلقائياً.</span>
             </div>
           </div>
 

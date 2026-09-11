@@ -1,39 +1,44 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { ShieldAlert, KeyRound, X, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { ShieldAlert, KeyRound, X, CheckCircle, Eye, EyeOff, Mail } from 'lucide-react';
 
 export const AdminModal: React.FC = () => {
-  const { adminModalOpen, setAdminModalOpen, verifyAdminPassword, lang, t } = useStore();
+  const { adminModalOpen, setAdminModalOpen, adminLogin, lang, t } = useStore();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   if (!adminModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (verifyAdminPassword(password)) {
+    setLoading(true);
+    setError(null);
+    const res = await adminLogin(email, password);
+    setLoading(false);
+    if (res.success) {
       setSuccess(true);
-      setError(false);
       setTimeout(() => {
         setSuccess(false);
         setPassword('');
       }, 500);
     } else {
-      setError(true);
+      setError(res.message);
     }
   };
 
   const handleClose = () => {
     setAdminModalOpen(false);
     setPassword('');
-    setError(false);
+    setError(null);
   };
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden text-black transform transition-all scale-100"
         onClick={(e) => e.stopPropagation()}
       >
@@ -45,14 +50,14 @@ export const AdminModal: React.FC = () => {
             </div>
             <div>
               <h3 className="font-bold text-lg leading-tight">
-                {lang === 'ar' ? 'بوابة الإدارة السرية' : 'Secret Admin Gate'}
+                {lang === 'ar' ? 'بوابة الإدارة' : 'Admin Gate'}
               </h3>
               <p className="text-xs text-blue-200 mt-0.5">
-                {lang === 'ar' ? 'تم تفعيل الدخول عبر 6 ضغطات متتالية' : 'Activated via 6-clicks trigger'}
+                {lang === 'ar' ? 'دخول المشرفين فقط' : 'Administrators only'}
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={handleClose}
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-white"
           >
@@ -64,30 +69,52 @@ export const AdminModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="text-center pb-2">
             <p className="text-sm text-neutral-600">
-              {lang === 'ar' 
-                ? 'يرجى إدخال مفتاح التحقق الخاص بالإدارة للوصول للوحة التحكم الشاملة'
-                : 'Please provide the secret master admin key to access full platform controls'}
+              {lang === 'ar'
+                ? 'سجل الدخول ببريد المشرف الموثق للوصول للوحة التحكم'
+                : 'Sign in with the verified admin email to access the dashboard'}
             </p>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-black block">
-              {lang === 'ar' ? 'كلمة مرور المشرف' : 'Admin Key Code'}
+              {lang === 'ar' ? 'بريد المشرف' : 'Admin Email'}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none text-neutral-400">
+                <Mail className="w-4 h-4 text-blue-600" />
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError(null);
+                }}
+                placeholder="admin@mail.com"
+                dir="ltr"
+                autoFocus
+                className="w-full ps-10 pe-4 py-3 text-sm bg-neutral-50 border border-neutral-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-black rounded-xl font-mono outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black block">
+              {lang === 'ar' ? 'كلمة المرور' : 'Password'}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none text-neutral-400">
                 <KeyRound className="w-4 h-4 text-blue-600" />
               </div>
-              <input 
+              <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setError(false);
+                  setError(null);
                 }}
-                placeholder="yaz@#..."
+                placeholder="••••••••"
                 dir="ltr"
-                autoFocus
                 className={`w-full ps-10 pe-10 py-3 text-sm bg-neutral-50 border ${
                   error ? 'border-red-500 ring-2 ring-red-100' : 'border-neutral-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-black'
                 } rounded-xl font-mono outline-none transition-all`}
@@ -103,7 +130,7 @@ export const AdminModal: React.FC = () => {
             {error && (
               <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center gap-1 animate-in fade-in">
                 <span>⚠️</span>
-                <span>{t.adminWrongPassword}</span>
+                <span>{error}</span>
               </p>
             )}
             {success && (
@@ -124,9 +151,10 @@ export const AdminModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-900/20 transition-all active:scale-[0.98]"
+              disabled={loading}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold shadow-md shadow-blue-900/20 transition-all active:scale-[0.98]"
             >
-              {t.adminUnlock}
+              {loading ? '...' : t.adminUnlock}
             </button>
           </div>
         </form>

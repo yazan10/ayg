@@ -22,6 +22,7 @@ import { AdminPage } from './pages/AdminPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { VerifyOtpPage } from './pages/VerifyOtpPage';
+import { FinishSignInPage } from './pages/FinishSignInPage';
 import { ProfileMenuPage } from './pages/ProfileMenuPage';
 import { PricingPage } from './pages/PricingPage';
 import { StoresPage } from './pages/StoresPage';
@@ -118,6 +119,7 @@ function AppRoutes() {
         <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
         <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/finishSignIn" element={<FinishSignInPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Welcome - first screen for guests */}

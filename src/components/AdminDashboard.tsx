@@ -256,12 +256,12 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
-  // Generate clean TypeScript data for direct Vercel source code
+  // Generate clean TypeScript backup data
   const generateVercelSourceCode = () => {
     return `// =========================================================================
-// aygram PRODUCTION REPOSITORY SEED DATA (src/data/initialData.ts)
+// aygram PRODUCTION SEED DATA (src/data/initialData.ts)
 // Generated automatically from aygram Admin Dashboard
-// Copy & paste this directly into your Vercel source code (src/data/initialData.ts)
+// Copy & paste this directly into src/data/initialData.ts
 // =========================================================================
 
 import { 
@@ -377,7 +377,7 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                 </span>
               </h1>
               <p className="text-xs text-neutral-500">
-                {lang === 'ar' ? 'إدارة المتاجر، المنتجات، الريلز، المستخدمين وتخزين سورس كود فيرسال اللحظي' : 'Stores, Catalog, Reels, Users & Real-time Vercel Source Sync'}
+                {lang === 'ar' ? 'إدارة المتاجر، المنتجات، الريلز، المستخدمين والنسخ الاحتياطي' : 'Stores, Catalog, Reels, Users & Backup'}
               </p>
             </div>
           </div>
@@ -492,7 +492,7 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
               }`}
             >
               <Code2 className="w-4 h-4 text-blue-500" />
-              <span>{lang === 'ar' ? 'تخزين فيرسال اللحظي' : 'Vercel Sync'}</span>
+              <span>{lang === 'ar' ? 'النسخ الاحتياطي' : 'Backup'}</span>
             </button>
 
             <button
@@ -736,19 +736,19 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-sm text-black flex items-center gap-2">
                     <Code2 className="w-4 h-4 text-blue-600" />
-                    <span>{lang === 'ar' ? 'تخزين فيرسال المباشر' : 'Direct Vercel Persistence'}</span>
+                    <span>{lang === 'ar' ? 'النسخ الاحتياطي المباشر' : 'Direct Backup'}</span>
                   </h3>
                   <button 
                     onClick={() => setActiveTab('vercel')}
                     className="text-xs text-blue-600 font-bold hover:underline"
                   >
-                    {lang === 'ar' ? 'فتح السورس كود' : 'Open Source'}
+                    {lang === 'ar' ? 'فتح النسخة الاحتياطية' : 'Open Backup'}
                   </button>
                 </div>
                 <p className="text-xs text-neutral-600 leading-relaxed mb-4">
                   {lang === 'ar' 
-                    ? 'كافة التعديلات والإضافات التي تجريها تحفظ محلياً وفورياً، ويمكنك بنقرة واحدة نسخ الكود البرمجي الكامل لتحديث مستودع فيرسال (Vercel Repository) مباشرة وبدون أخطاء!'
-                    : 'All updates persist instantly. You can copy the unified source data in one click to deploy directly on Vercel with zero database errors.'}
+                    ? 'كافة التعديلات والإضافات التي تجريها تُحفظ تلقائياً وفورياً، ويمكنك بنقرة واحدة نسخ النسخة الاحتياطية الكاملة مباشرة وبدون أخطاء!'
+                    : 'All updates save automatically and instantly. You can copy the full backup in one click with zero errors.'}
                 </p>
                 <div className="p-3 bg-neutral-900 text-emerald-400 font-mono text-[11px] rounded-xl flex items-center justify-between">
                   <span>src/data/initialData.ts (Ready)</span>
@@ -1540,7 +1540,7 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
           </div>
         )}
 
-        {/* VERCEL SOURCE CODE TAB (مطلب المستخدم: "وركز ع موضوع التخزين اللحظي في فيرسال") */}
+        {/* BACKUP TAB */}
         {activeTab === 'vercel' && (
           <div className="space-y-6">
             {/* Live Instant Sync Header Banner */}
@@ -1549,19 +1549,19 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                 <div className="flex items-center gap-3">
                   <div className="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping" />
                   <h2 className="text-lg font-black tracking-tight">
-                    {lang === 'ar' ? 'نظام التخزين اللحظي لسورس كود فيرسال (Vercel Live Source Engine)' : 'Vercel Real-Time Source Sync'}
+                    {lang === 'ar' ? 'نظام النسخ الاحتياطي الفوري' : 'Instant Backup System'}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/30">
-                    Auto-Synced to LocalStorage & Ready for Git
+                    Auto-Synced & Ready
                   </span>
                 </div>
               </div>
               <p className="text-xs text-neutral-300 leading-relaxed max-w-3xl">
                 {lang === 'ar'
-                  ? 'أي تغيير تقوم به على المتاجر، المنتجات، فيديوهات الريلز، أو إعدادات المنصة يُحفظ لحظياً في الذاكرة المحلية، ويمكنك فوراً تصديره بضغطة زر وتحديث ملف `src/data/initialData.ts` في مستودع GitHub / Vercel ليصبح التخزين دائماً عبر الكود البرمجي المباشر بدون أية قواعد بيانات خارجية.'
-                  : 'Every update to stores, products, reels, and settings is persisted in real-time. Export with one click to update `src/data/initialData.ts` in your Vercel/GitHub repo.'}
+                  ? 'أي تغيير تقوم به على المتاجر، المنتجات، فيديوهات الريلز، أو إعدادات المنصة يُحفظ تلقائياً وفورياً، ويمكنك تصدير نسخة احتياطية كاملة بضغطة زر في أي وقت.'
+                  : 'Every update to stores, products, reels, and settings is saved automatically and instantly. Export a full backup with one click at any time.'}
               </p>
 
               {/* Action Buttons Row */}
@@ -1612,7 +1612,7 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
             <div className="bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm space-y-3">
               <h4 className="font-bold text-xs text-black flex items-center gap-2">
                 <span>⚡</span>
-                <span>{lang === 'ar' ? 'طريقة النشر على Vercel بدون قواعد بيانات (100% Serverless & Static)' : 'How to deploy to Vercel (Zero DB, Zero Errors)'}</span>
+                <span>{lang === 'ar' ? 'طريقة حفظ نسخة احتياطية دائمة' : 'How to keep a permanent backup'}</span>
               </h4>
               <ol className="text-xs text-neutral-600 space-y-2 list-decimal list-inside leading-relaxed">
                 <li>
@@ -1622,13 +1622,13 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                 </li>
                 <li>
                   {lang === 'ar'
-                    ? 'استبدل ملف `src/data/initialData.ts` في مشروعك على GitHub ثم ادفعه بـ git commit و git push.'
-                    : 'Replace `src/data/initialData.ts` in your project and push to GitHub.'}
+                    ? 'استبدل ملف `src/data/initialData.ts` في مشروعك بالنسخة الجديدة.'
+                    : 'Replace `src/data/initialData.ts` in your project with the new version.'}
                 </li>
                 <li>
                   {lang === 'ar'
-                    ? 'يقوم فيرسال (Vercel) فوراً بإعادة بناء الموقع خلال ثوانٍ معدودة بكافة التحديثات الجديدة وتصبح دائمة لجميع الزوار مجاناً وبسرعة فائقة!'
-                    : 'Vercel will trigger a new deployment in seconds with all latest updates baked into the bundle!'}
+                    ? 'ستُحفظ جميع التحديثات الجديدة وتصبح دائمة لجميع الزوار!'
+                    : 'All latest updates will be saved and permanent for all visitors!'}
                 </li>
               </ol>
             </div>
@@ -1952,7 +1952,7 @@ export const INITIAL_SETTINGS: AdminSettings = ${JSON.stringify(adminSettings, n
                           </button>
                         )}
                         <button onClick={async () => {
-                          if(!confirm('حذف المستخدم نهائياً من كل قواعد البيانات؟ سيُحذف من Firestore و RTDB و localStorage بشكل نهائي ولا يمكن استعادته.')) return;
+                          if(!confirm('حذف المستخدم نهائياً من كل أماكن التخزين؟ سيُحذف بشكل نهائي ولا يمكن استعادته.')) return;
                           try {
                             // Delete from Firestore
                             const { db } = await import('../lib/firebase');

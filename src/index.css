@@ -11,11 +11,17 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    touch-action: manipulation;
+    /* FIX SCROLL: allow native vertical panning on all screens */
+    touch-action: pan-x pan-y;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
+    /* don't block scroll chaining / pull — auto lets page + nested lists scroll naturally */
+    overscroll-behavior-y: auto;
+    overflow-y: auto;
+    overflow-x: clip;
+    height: auto;
+    min-height: 100%;
   }
 
   body {
@@ -24,11 +30,35 @@
     color: #0f172a;
     background-color: #f8fafc;
     background-image: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.06) 0%, transparent 55%);
-    background-attachment: fixed;
+    /* FIX: background-attachment:fixed freezes/janks scroll on mobile — use scroll */
+    background-attachment: scroll;
     text-rendering: optimizeLegibility;
-    overscroll-behavior-y: contain;
-    touch-action: manipulation;
+    /* FIX SCROLL: contain blocked page scroll when inner lists hit edges */
+    overscroll-behavior-y: auto;
+    touch-action: pan-x pan-y;
     -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overflow-x: clip;
+    min-height: 100dvh;
+    position: relative;
+    width: 100%;
+  }
+
+  #root {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  /* Responsive Images — keep inside base layer so Tailwind h-full/w-full utilities win */
+  img {
+    max-width: 100%;
+    object-fit: cover;
+    object-position: center;
+    background-color: #f1f5f9;
+    font-size: 0;
   }
 
   /* Prevent auto-zoom on mobile inputs - must be 16px */
@@ -147,16 +177,8 @@ h2 {
   font-size: clamp(1.25rem, 3vw, 1.875rem);
 }
 
-/* Responsive Images - Fixed */
-img {
-  max-width: 100%;
-  height: auto;
-  object-fit: cover;
-  object-position: center;
-  background-color: #f1f5f9;
-  font-size: 0;
-}
-
+/* img base lives in @layer base above so Tailwind h-full / h-* / w-* utilities win.
+   Keep only helpers here (unlayered helpers must NOT set height/width). */
 img[src=""],
 img:not([src]) {
   display: none;
@@ -183,26 +205,40 @@ img.loading {
   100% { background-position: 200% 0; }
 }
 
-/* Touch Target - Minimum 44px for mobile */
+/* Touch Target — FIX: old rule forced 44px min-width/height on EVERY
+   button/link on mobile, breaking header/nav layout and touch scrolling.
+   Keep accessible targets without breaking layout: only min-height, no min-width,
+   and exclude icon buttons / nav pills. */
 @media (max-width: 640px) {
-  button,
-  a {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  button span,
-  a span {
-    min-height: auto;
-    min-width: auto;
+  main button:not(.no-touch-target),
+  main a:not(.no-touch-target) {
+    min-height: 36px;
   }
 }
 
-/* Prevent horizontal scroll */
+/* Prevent horizontal scroll WITHOUT breaking vertical scroll or sticky.
+   overflow-x:hidden creates a scroll container and forces overflow-y:auto;
+   overflow-x:clip prevents sideways scroll without doing that. */
 html,
 body {
-  overflow-x: hidden;
-  max-width: 100vw;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+/* Scrollable areas must pan vertically with momentum on iOS/Android */
+.scroll-y,
+.overflow-y-auto,
+.overflow-auto {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Page content must never trap vertical scroll */
+.page-scroll,
+main,
+article {
+  touch-action: pan-x pan-y;
 }
 
 /* Admin Dashboard Exclusive Font */

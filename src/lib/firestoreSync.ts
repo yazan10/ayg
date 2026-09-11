@@ -1,4 +1,4 @@
-// Firestore sync for aygram - real-time persistence with Firebase + localStorage fallback
+// Cloud sync for aygram - real-time persistence with cloud + localStorage fallback
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, onSnapshot } from 'firebase/firestore';
 
@@ -53,7 +53,7 @@ export const subscribeToCollection = (collectionName: string, docId: string, cal
   }
 };
 
-// Check Firebase connection
+// Check cloud connection
 export const checkFirebaseConnection = async (): Promise<boolean> => {
   if (!isFirebaseAvailable() || !db) return false;
   try {

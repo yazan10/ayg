@@ -6,6 +6,12 @@ coverage/
 *.log
 .env*
 !.env.example
+# Service account keys & secrets - NEVER commit
+serviceAccountKey.json
+service-account*.json
+*-key.json
+*.pem
+secrets/
 .vercel
 .firebase/
 firebase-debug.log

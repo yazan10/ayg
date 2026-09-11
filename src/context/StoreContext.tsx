@@ -81,7 +81,7 @@ interface StoreContextType {
   adminSettings: AdminSettings;
   setAdminModalOpen: (open: boolean) => void;
   handleLogoClick: () => void;
-  verifyAdminPassword: (password: string) => boolean;
+  adminLogin: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   logoutAdmin: () => void;
   addStore: (newStore: Omit<Store, 'id' | 'createdAt' | 'highlights' | 'rating' | 'followersCount'>) => Store;
   updateStore: (id: string, updated: Partial<Store>) => void;
@@ -484,9 +484,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   });
 
-  // Admin secret state
+  // Admin session state (Firebase Auth + admin claim, hardened by server when available)
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const ADMIN_SESSION_KEY = 'aygram_admin_session';
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const clickCountRef = useRef(0);
 
@@ -641,7 +642,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
   }, [reports]);
 
-  // Firebase Firestore sync (real-time cloud backup)
+  // Cloud sync (real-time backup)
   useEffect(() => {
     const t = setTimeout(() => { syncStoresToFirestore(stores); }, 1500);
     return () => clearTimeout(t);
@@ -703,28 +704,109 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  // Verify secret password: User requested "خلي الادمن بنفس نص اليوزر"
-  // So entering the username itself (or with @, or master passwords) unlocks Admin!
-  const verifyAdminPassword = (password: string): boolean => {
-    const trimmed = password.trim().toLowerCase();
-    const currentHandle = currentUser.username.toLowerCase();
-    if (
-      trimmed === currentHandle ||
-      trimmed === `@${currentHandle}` ||
-      trimmed === 'ayzan_official' ||
-      trimmed === '@ayzan_official' ||
-      trimmed === 'yaz@#5y' ||
-      trimmed === 'admin'
-    ) {
+  // Admin login: Firebase Auth (email + password) + verified email + admin claim.
+  // Works on any host (Vercel static included). When the Node server is reachable
+  // it additionally mints a hardened server session (best effort).
+  const adminLogin = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || !password) {
+      return { success: false, message: 'أدخل البريد وكلمة المرور' };
+    }
+    try {
+      const { auth } = await import('../lib/firebase');
+      if (!auth) throw { code: 'auth/network-request-failed' };
+      const { signInWithEmailAndPassword, sendEmailVerification } = await import('firebase/auth');
+      const cred = await signInWithEmailAndPassword(auth, normalized, password);
+      try { await cred.user.reload(); } catch {}
+      if (!cred.user.emailVerified) {
+        await sendEmailVerification(cred.user).catch(() => {});
+        try {
+          const { signOut } = await import('firebase/auth');
+          await signOut(auth).catch(() => {});
+        } catch {}
+        return { success: false, message: 'هذا البريد غير موثق — أرسلنا رابط تحقق إلى بريدك، أكده ثم حاول مجدداً' };
+      }
+      const tokenResult = await cred.user.getIdTokenResult(true).catch(() => null);
+      if (!tokenResult?.claims?.admin) {
+        try {
+          const { signOut } = await import('firebase/auth');
+          await signOut(auth).catch(() => {});
+        } catch {}
+        return { success: false, message: 'هذا الحساب ليس مشرفاً' };
+      }
+      // Best-effort hardened server session (only works where the Node server runs)
+      try {
+        const idToken = await cred.user.getIdToken();
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.token) {
+            try { sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ token: data.token, email: normalized, at: Date.now() })); } catch {}
+          }
+        }
+      } catch {}
       setIsAdmin(true);
       setAdminModalOpen(false);
-      return true;
+      return { success: true, message: 'تم تسجيل دخول الإدارة بنجاح' };
+    } catch (e: any) {
+      const code = e?.code as string | undefined;
+      if (code === 'auth/network-request-failed') return { success: false, message: 'تعذر الاتصال — تحقق من الإنترنت' };
+      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        return { success: false, message: 'بيانات الدخول غير صحيحة' };
+      }
+      if (code === 'auth/too-many-requests') return { success: false, message: 'محاولات كثيرة — انتظر قليلاً' };
+      if (code === 'auth/operation-not-allowed') return { success: false, message: 'الدخول بالبريد متوقف مؤقتاً' };
+      return { success: false, message: e?.message || 'تعذر تسجيل الدخول' };
     }
-    return false;
   };
+
+  // Restore admin session on load: server session first, then Firebase claim check
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.token) {
+            try {
+              const res = await fetch('/api/admin/me', { headers: { Authorization: `Bearer ${parsed.token}` } });
+              if (res.ok) {
+                const data = await res.json();
+                if (data?.isAdmin) {
+                  setIsAdmin(true);
+                  return;
+                }
+              }
+            } catch {}
+            try { sessionStorage.removeItem(ADMIN_SESSION_KEY); } catch {}
+          }
+        }
+      } catch {}
+      try {
+        const { auth } = await import('../lib/firebase');
+        const fbUser = auth?.currentUser;
+        if (fbUser?.email) {
+          try { await fbUser.reload(); } catch {}
+          if (fbUser.emailVerified) {
+            const tokenResult = await fbUser.getIdTokenResult().catch(() => null);
+            if ((tokenResult?.claims as any)?.admin === true) {
+              setIsAdmin(true);
+              return;
+            }
+          }
+        }
+      } catch {}
+      setIsAdmin(false);
+    })();
+  }, []);
 
   const logoutAdmin = () => {
     setIsAdmin(false);
+    try { sessionStorage.removeItem(ADMIN_SESSION_KEY); } catch {}
   };
 
   // Update current user profile
@@ -1272,7 +1354,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   };
 
-  // Vercel source code exporter
+  // Backup data exporter
   const exportVercelSourceCode = (): string => {
     const payload = {
       stores,
@@ -1687,7 +1769,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         adminSettings,
         setAdminModalOpen,
         handleLogoClick,
-        verifyAdminPassword,
+        adminLogin,
         logoutAdmin,
         addStore,
         updateStore,

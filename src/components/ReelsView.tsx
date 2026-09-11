@@ -64,9 +64,9 @@ export const ReelsView: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-[calc(100vh-7rem)] md:min-h-[750px] flex flex-col items-center justify-center relative select-none">
+    <div className="w-full max-w-md mx-auto min-h-[calc(100dvh-7rem)] md:min-h-[750px] flex flex-col items-center justify-center relative select-none touch-pan-y">
       {/* Reels Feed Container */}
-      <div className="w-full h-[640px] sm:h-[700px] bg-black rounded-2xl md:rounded-3xl overflow-hidden relative shadow-2xl border border-neutral-800 flex flex-col">
+      <div className="w-full h-[calc(100dvh-12rem)] min-h-[480px] max-h-[700px] sm:h-[700px] bg-black rounded-2xl md:rounded-3xl overflow-hidden relative shadow-2xl border border-neutral-800 flex flex-col">
         {reels.map((reel, idx) => {
           const isCurrent = idx === activeReelIdx;
           if (!isCurrent) return null;

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Mail, ArrowLeft, CheckCircle, AlertTriangle, KeyRound } from 'lucide-react';
 import { AppPageLoader } from '../components/ui/AppPageLoader';
 import '../components/ui/AuthFormCard.css';
 
 export const ResetPasswordPage: React.FC = () => {
+  const { sendPasswordReset } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -18,16 +20,13 @@ export const ResetPasswordPage: React.FC = () => {
     }
     setLoading(true);
     setMessage(null);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    const res = await sendPasswordReset(email);
+    setLoading(false);
+    if (res.success) {
       setSent(true);
-      setMessage({ type: 'success', text: `تم إرسال رابط إعادة التعيين إلى ${email} — تفقد بريدك (وصندوق الرسائل المزعجة)` });
-    } catch (err: any) {
-      let text = 'حدث خطأ أثناء الإرسال';
-      if (err?.message) text = err.message;
-      setMessage({ type: 'error', text });
-    } finally {
-      setLoading(false);
+      setMessage({ type: 'success', text: `${res.message} — تفقد بريدك (وصندوق الرسائل المزعجة)` });
+    } else {
+      setMessage({ type: 'error', text: res.message });
     }
   };
 

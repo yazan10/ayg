@@ -22,7 +22,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, showBac
   };
 
   return (
-    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-neutral-200 px-4 h-14 flex items-center justify-between">
+    <div className="sticky top-[56px] sm:top-[60px] z-20 bg-white/95 backdrop-blur-md border-b border-neutral-200 px-4 h-14 flex items-center justify-between">
       <div className="flex items-center gap-3">
         {showBack && (
           <button

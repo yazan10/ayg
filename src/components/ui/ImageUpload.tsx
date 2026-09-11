@@ -45,8 +45,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     try {
       const compressed = await compressImage(file, 1024, 0.72);
-      const vercelLink = compressed.dataUrl; // In production, upload to Vercel Blob and get URL
-      onChange(vercelLink);
+      const imageLink = compressed.dataUrl; // compressed image ready as data URL
+      onChange(imageLink);
       setFileInfo({
         name: file.name,
         originalSize: compressed.originalSize,
@@ -102,7 +102,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         {isCompressing ? (
           <>
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-            <span className="text-xs font-bold text-blue-700">جاري الضغط والحفظ في Vercel...</span>
+            <span className="text-xs font-bold text-blue-700">جاري الضغط والحفظ...</span>
             <span className="text-[11px] text-neutral-500">سيتم ضغط الصورة وتحويلها لرابط</span>
           </>
         ) : value ? (
@@ -116,7 +116,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <span className="text-xs font-bold text-emerald-700">تم الرفع والضغط بنجاح ✓</span>
             {fileInfo && (
               <span className="text-[11px] text-neutral-500 font-mono">
-                {fileInfo.name} • {formatSize(fileInfo.originalSize)} → {formatSize(fileInfo.compressedSize)} • محفوظ في Vercel
+                {fileInfo.name} • {formatSize(fileInfo.originalSize)} → {formatSize(fileInfo.compressedSize)} • تم الحفظ
               </span>
             )}
             <span className="text-[11px] text-blue-600 font-bold hover:underline">اضغط لتغيير الصورة</span>
@@ -129,7 +129,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <span className="text-sm font-black text-[#323232]">{placeholder}</span>
             <span className="text-[11px] text-neutral-500 text-center leading-relaxed">
               JPG, PNG, WebP — حتى 15MB<br />
-              سيتم الضغط تلقائياً وحفظ الرابط في Vercel
+              سيتم الضغط تلقائياً وحفظ الصورة
             </span>
             <span className="text-xs font-bold text-white bg-[#323232] px-3 py-1.5 rounded-full shadow-[2px_2px_#323232]">
               اختيار من الجهاز

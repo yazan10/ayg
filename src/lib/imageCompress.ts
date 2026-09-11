@@ -1,4 +1,4 @@
-// Image compression for Vercel storage - compress to data URL
+// Image compression - compress to data URL
 export interface CompressedImage {
   dataUrl: string;
   originalSize: number;
@@ -85,11 +85,8 @@ export const compressImage = (file: File, maxWidth = 1024, quality = 0.72): Prom
   });
 };
 
-// Helper to generate Vercel-like link (simulated)
-// In production, you would upload dataUrl to Vercel Blob via API and get back a https://... URL
+// Helper to prepare the compressed image link for storage
 export const generateVercelLink = (dataUrl: string): string => {
-  // For demo, we keep dataUrl as "link" but mark it as vercel-stored
-  // In real Vercel Blob, you'd POST to /api/upload and get url
   return dataUrl;
 };
 
